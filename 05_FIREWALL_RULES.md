@@ -8,7 +8,7 @@ Your supernet architecture enables simplified firewall management:
 
 **Network Segmentation:**
 - **Secure_Net** (192.168.0.0/20): MGMT, SERVERS, WIFI_SECURE
-- **Unsecure_Net** (192.168.16.0/20): GUEST
+- **Unsecure_Net** (192.168.16.0/20): GUEST, HomeAssist, Cailin
 
 **Benefits:**
 - ✅ **9 floating rules** instead of 20+ interface rules
@@ -44,7 +44,7 @@ Before creating floating rules, create aliases for easier management.
 - **Name**: `Unsecure_Net`
 - **Type**: Network(s)
 - **Content**: `192.168.16.0/20`
-- **Description**: `Isolated networks (GUEST)`
+- **Description**: `Isolated networks (GUEST, HomeAssist, Cailin)`
 
 **Click:** Save
 
@@ -447,14 +447,14 @@ After creating all rules, verify the order in **Firewall → Rules → Floating*
 | # | Action | Quick | Interface | Source | Destination | Description |
 |---|--------|-------|-----------|--------|-------------|-------------|
 | 1 | Pass | ✓ | MGMT_LAN, Tailscale | Management_Access | This Firewall:443 | Allow web UI from MGMT/Tailscale |
-| 2 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST | any | This Firewall:443 | Block web UI from unauthorized |
+| 2 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin | any | This Firewall:443 | Block web UI from unauthorized |
 | 3 | Pass | ✓ | MGMT_LAN, Tailscale | Management_Access | This Firewall:22 | Allow SSH from MGMT/Tailscale |
-| 4 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST | any | This Firewall:22 | Block SSH from unauthorized |
-| 5 | Pass | ✓ | SERVERS, WIFI_SECURE, GUEST | any | Pi_hole_DNS:53 | Allow all networks DNS to Pi-hole |
+| 4 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin | any | This Firewall:22 | Block SSH from unauthorized |
+| 5 | Pass | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin | any | Pi_hole_DNS:53 | Allow all networks DNS to Pi-hole |
 | 6 | Pass | ✓ | WIFI_SECURE | WIFI_SECURE net | UniFi_Controller:AP_Communication | Allow APs to controller |
-| 7 | Block | ✓ | GUEST | Unsecure_Net | Secure_Net | Block isolated → secure |
-| 8 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST | any | MGMT net | Block clients → MGMT |
-| 9 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST | any | WAN_Net | Block clients → ISP network |
+| 7 | Block | ✓ | GUEST, HomeAssist, Cailin | Unsecure_Net | Secure_Net | Block isolated → secure |
+| 8 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin | any | MGMT net | Block clients → MGMT |
+| 9 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin | any | WAN_Net | Block clients → ISP network |
 
 **Why This Order?**
 1. **Web UI access first**: Allow management access from authorized networks

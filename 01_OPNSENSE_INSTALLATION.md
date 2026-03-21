@@ -16,7 +16,7 @@
 - **Power**: Low power consumption (~6W idle), fanless design
 - **Form Factor**: Compact, ideal for always-on router duty
 
-**NIC roles**: em1 carries all VLAN trunks (native VLAN 1/MGMT + tagged VLANs 10/11/20/21)
+**NIC roles**: em1 carries all VLAN trunks (native VLAN 1/MGMT + tagged VLANs 10/11/20/21/30)
 to the Aruba 2530-24G switch. em2 is unused. em3 is a physically isolated out-of-band port —
 **configured immediately after first login**, before VLANs or firewall rules. It is your
 safety net for all subsequent work.

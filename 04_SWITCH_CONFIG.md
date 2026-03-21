@@ -31,7 +31,7 @@
 | 23 | DSL Modem | Access | VLAN 250 (DMZ — direct modem, bypasses router) |
 | 24 | Management Laptop | Access | VLAN 1 |
 | 25 | NetGear GS310TP (SFP uplink) | Access | VLAN 11 |
-| 26 | Available (SFP) | — | — |
+| 26 | NetGear GS310TP (SFP uplink) | Access | VLAN 30 (Cailin) |
 
 ---
 
@@ -51,7 +51,7 @@
 | 23 (DSL Modem) | — | — | — | — | — | — | **U** |
 | 24 (Mgmt Laptop) | **U** | — | — | — | — | — | — |
 | 25 (NetGear SFP) | — | — | **U** | — | — | — | — |
-| 26 (SFP unused) | — | — | — | — | — | — | — |
+| 26 (NetGear SFP) | — | — | — | — | — | **U** | — |
 
 U = Untagged (native), T = Tagged, — = Not a member
 
@@ -186,6 +186,15 @@ Port 24 stays on default VLAN 1 Untagged — no change needed (default).
 | 1 | No |
 | 11 | Untagged |
 
+### Step 9: Configure Port 26 (SFP) — NetGear Dumb Switch (VLAN 30 Cailin)
+
+| VLAN | Port 26 |
+|------|---------|
+| 1 | No |
+| 30 | Untagged |
+
+> Port 26 connects to the NetGear GS310TP via SFP. Devices plugged into the NetGear on this uplink land on VLAN 30 (192.168.30.0/24, Cailin). No VLAN config needed on the NetGear itself.
+
 ---
 
 ## CLI Equivalent (if preferred)
@@ -230,9 +239,13 @@ vlan 21 tagged 13-14
 no vlan 1 untagged 23
 vlan 250 untagged 23
 
-# Port 25 (SFP) — NetGear dumb switch (VLAN 11 access)
+# Port 25 (SFP) — NetGear dumb switch (VLAN 11, WiFi_Secure)
 no vlan 1 untagged 25
 vlan 11 untagged 25
+
+# Port 26 (SFP) — NetGear dumb switch (VLAN 30, Cailin)
+no vlan 1 untagged 26
+vlan 30 untagged 26
 
 # Ports 6-12, 15-22 stay on VLAN 1 (default) — available
 
@@ -277,7 +290,7 @@ Expected VLAN summary:
 | 11 | WiFi_Secure | 25 | 1, 13, 14 |
 | 20 | Guest | — | 1, 13, 14 |
 | 21 | HomeAuto | — | 1, 13, 14 |
-| 30 | Cailin | — | 1 |
+| 30 | Cailin | 26 | 1 |
 | 250 | DMZ | 23 | — |
 
 ---
@@ -302,9 +315,16 @@ Or CLI: `write memory`
 
 ---
 
-## NetGear GS310TP as Dumb Switch (Port 25 SFP)
+## NetGear GS310TP as Dumb Switch (Ports 25 and 26 SFP)
 
-The NetGear is connected via Port 25 (SFP-1 uplink). It acts as a plain switch — no VLAN config needed on the NetGear itself. The Aruba enforces VLAN 11 access on Port 25. Devices connected to NetGear ports land on VLAN 11 (192.168.11.0/24, WiFi_Secure).
+The NetGear is connected via two SFP uplinks from the Aruba. It acts as a plain switch — no VLAN config needed on the NetGear itself. The Aruba enforces VLAN membership per SFP port:
+
+| Aruba Port | NetGear SFP | VLAN | Network |
+|------------|-------------|------|---------|
+| 25 (SFP-1) | SFP-1 | 11 | WiFi_Secure (192.168.11.0/24) |
+| 26 (SFP-2) | SFP-2 | 30 | Cailin (192.168.30.0/24) |
+
+Devices plugged into NetGear copper ports connected to the SFP-1 uplink land on VLAN 11; devices on the SFP-2 uplink land on VLAN 30. The NetGear does not need any configuration.
 
 > Note: If using an SFP-to-RJ45 adapter, ensure compatibility with the Aruba 2530.
 

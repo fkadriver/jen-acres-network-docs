@@ -97,7 +97,7 @@ Consolidated troubleshooting for all network components.
 
 **Solution**:
 1. Verify PoE is enabled and delivering power (PoE → PoE Status)
-2. Check AP port (6 or 7) has Native VLAN 10 (untagged) and VLANs 11, 20, 21 (tagged)
+2. Check AP port (13 or 14) has Native VLAN 10 (untagged) and VLANs 11, 20, 21 (tagged)
 3. Verify AP ports are NOT members of VLAN 1 (remove if present)
 4. Check DHCP is enabled on SERVERS interface in OPNsense (VLAN 10, 192.168.10.x)
 5. Verify firewall allows AP to reach UniFi Controller (port 8080)
