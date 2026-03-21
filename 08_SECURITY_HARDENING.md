@@ -13,6 +13,56 @@ After initial installation, implement security best practices to harden your OPN
 ✅ Change default web UI port (optional)
 ✅ Enable two-factor authentication (2FA)
 ✅ Configure automatic security updates
+✅ Break-glass port (em3) configured for physical emergency access
+
+---
+
+## Break-Glass Emergency Access (em3 / MGMT_Only)
+
+The Protectli em3 port is a dedicated out-of-band emergency access interface. It is
+**physically isolated** — not part of bridge0 and unreachable from any other network.
+
+**Normal state**: cable unplugged. The interface is live but no device is connected.
+
+**Use when**: Tailscale is down, the bridge misconfigured, or all normal access is lost.
+
+### How to use
+
+1. Plug a laptop directly into the **em3 port** on the Protectli (back panel)
+2. Laptop gets a DHCP address automatically: `192.168.99.2`–`192.168.99.6`
+3. Open browser → `https://192.168.99.1` (expect a cert warning — this is the local IP, not the Tailscale hostname)
+4. SSH: `ssh scott@192.168.99.1`
+5. After fixing the issue, **unplug the cable**
+
+### What this port can reach
+
+| Destination | Reachable? |
+|---|---|
+| OPNsense web UI (192.168.99.1:443) | ✅ Yes |
+| OPNsense SSH (192.168.99.1:22) | ✅ Yes |
+| MGMT_LAN (192.168.1.x) | ❌ No — firewall blocks |
+| SERVERS / VLANs (192.168.10–21.x) | ❌ No — firewall blocks |
+| Internet | ❌ No — no NAT rule, no route |
+
+### Network details
+
+```
+Interface: MGMT_Only (em3)
+Subnet:    192.168.99.0/29
+Gateway:   192.168.99.1  (OPNsense)
+DHCP:      192.168.99.2 – 192.168.99.6  (5 addresses max)
+Broadcast: 192.168.99.7
+```
+
+### Security properties
+
+- `/29` subnet limits blast radius to 5 DHCP leases — no accidental expansion
+- No route to internal networks or internet — physical access is the only attack vector
+- Separate from `Management_Access` alias (Tailscale floating rules do not apply here)
+- em3 is not monitored by normal network tooling — treat physical access to it as root access
+
+> **Physical security**: The em3 port is the last line of defense. Restrict physical access
+> to the Protectli hardware accordingly.
 
 ---
 

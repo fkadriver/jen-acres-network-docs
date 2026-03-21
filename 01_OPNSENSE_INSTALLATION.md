@@ -10,36 +10,46 @@
 - **NICs** (4x Intel Gigabit Ethernet):
   - Intel I211 chipset (igb driver in FreeBSD)
   - `em0` - WAN (to ISP modem/router)
-  - `em1` - LAN/MGMT (VLAN trunk to managed switch — carries all VLANs)
-  - `em2` - Available for future use
-  - `em3` - Available for future use
+  - `em1` - VLAN trunk (to Aruba 2530-24G switch)
+  - `em2` - Unused
+  - `em3` - Break-glass emergency access (isolated 192.168.99.0/29, NOT in use for VLANs)
 - **Power**: Low power consumption (~6W idle), fanless design
 - **Form Factor**: Compact, ideal for always-on router duty
 
-**Note**: Intel NICs provide excellent performance and reliability for VLAN tagging and routing. All networks (MGMT, SERVERS, WIFI_SECURE, GUEST, HomeAssist) trunk through em1 to the managed switch using 802.1Q VLAN tags. em2 and em3 are unused.
+**NIC roles**: em1 carries all VLAN trunks (native VLAN 1/MGMT + tagged VLANs 10/11/20/21)
+to the Aruba 2530-24G switch. em2 is unused. em3 is a physically isolated out-of-band port —
+**configured immediately after first login**, before VLANs or firewall rules. It is your
+safety net for all subsequent work.
+
+---
 
 ## Download OPNsense
 
-### Version: 25.7 (Latest Stable)
+### Version: 26.1 "Witty Woodpecker" (Current)
+
+> **Existing install?** Skip this section. See [13_OPNSENSE_26_1_UPGRADE.md](13_OPNSENSE_26_1_UPGRADE.md)
+> for the in-place upgrade procedure.
 
 **Download Image:**
 ```bash
 cd ~/Downloads
 
 # Download the amd64 DVD image
-wget https://mirror.ams1.nl.leaseweb.net/opnsense/releases/25.7/OPNsense-25.7-dvd-amd64.iso.bz2
+wget https://mirror.ams1.nl.leaseweb.net/opnsense/releases/26.1/OPNsense-26.1-dvd-amd64.iso.bz2
 
 # Verify checksum (optional but recommended)
-wget https://mirror.ams1.nl.leaseweb.net/opnsense/releases/25.7/OPNsense-25.7-checksums-amd64.sha256
-sha256sum -c OPNsense-25.7-checksums-amd64.sha256 2>&1 | grep dvd
+wget https://mirror.ams1.nl.leaseweb.net/opnsense/releases/26.1/OPNsense-26.1-checksums-amd64.sha256
+sha256sum -c OPNsense-26.1-checksums-amd64.sha256 2>&1 | grep dvd
 
 # Extract the image
-bunzip2 OPNsense-25.7-dvd-amd64.iso.bz2
+bunzip2 OPNsense-26.1-dvd-amd64.iso.bz2
 ```
 
 **Alternative Mirrors:**
-- US: `https://mirror.wdc1.us.leaseweb.net/opnsense/releases/25.7/`
-- EU: `https://mirror.fra10.de.leaseweb.net/opnsense/releases/25.7/`
+- US: `https://mirror.wdc1.us.leaseweb.net/opnsense/releases/26.1/`
+- EU: `https://mirror.fra10.de.leaseweb.net/opnsense/releases/26.1/`
+
+---
 
 ## Create Bootable USB
 
@@ -57,7 +67,7 @@ sudo fdisk -l /dev/sdX
 # CAUTION: This will erase all data on the USB drive!
 # Replace /dev/sdX with your actual USB device
 
-sudo dd if=OPNsense-25.7-dvd-amd64.iso of=/dev/sdX bs=4M status=progress oflag=sync
+sudo dd if=OPNsense-26.1-dvd-amd64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 
 # Wait for completion, then safely eject
 sudo sync
@@ -67,9 +77,10 @@ sudo eject /dev/sdX
 ### Alternative: Using Ventoy
 If you have Ventoy installed on your USB:
 ```bash
-# Simply copy the ISO to the Ventoy USB drive
-cp OPNsense-25.7-dvd-amd64.iso /path/to/ventoy/usb/
+cp OPNsense-26.1-dvd-amd64.iso /path/to/ventoy/usb/
 ```
+
+---
 
 ## Installation Process
 
@@ -87,25 +98,22 @@ cp OPNsense-25.7-dvd-amd64.iso /path/to/ventoy/usb/
 **Installation Steps:**
 1. Select: **Install (UFS)**
    - UFS is more reliable than ZFS on systems without ECC RAM
-   - ZFS is only recommended if you have ECC RAM
 
-2. **Select target disk**: Choose your SSD (usually ada0 or da0)
+2. **Select target disk**: Choose your SSD (usually `ada0` or `da0`)
 
 3. **Partitioning**: Choose **"Complete Disk"**
-   - Uses entire disk for OPNsense
-   - Automatically creates swap partition
 
 4. **Confirm installation**: Type `Yes` when prompted
 
 5. **Installation progress**: Wait 5-10 minutes
 
-6. **Set root password**:
-   - Choose a strong password
-   - Write it down securely
+6. **Set root password** — choose a strong password and record it securely
 
 7. **Complete**: Select "Exit and Reboot"
 
 8. **Remove USB drive** when prompted
+
+---
 
 ## Initial Console Configuration
 
@@ -131,7 +139,8 @@ Enter the LAN interface name: em1
 Do you want to proceed? [y/n]: y
 ```
 
-**Note**: We only assign em0 (WAN) and em1 (LAN/trunk) at this stage. All additional networks are created as VLAN sub-interfaces on em1 via the web UI — see [02_VLAN_CONFIG.md](02_VLAN_CONFIG.md).
+> Only assign em0 (WAN) and em1 (LAN) at the console. em3 is configured via the web UI
+> immediately after first login (see next section). em2 is not used.
 
 ### Set LAN IP Address
 
@@ -151,37 +160,151 @@ For a WAN, enter the new LAN IPv4 upstream gateway address: [press Enter for non
 Configure IPv6 address LAN interface via DHCP6? [y/n]: n
 
 Do you want to enable the DHCP server on LAN? [y/n]: n
-(We'll configure DHCP per-VLAN later)
+(We'll configure DHCP per-VLAN later via Dnsmasq)
 
 Do you want to revert to HTTP as the web GUI protocol? [y/n]: n
-(Keep HTTPS for security)
+(Keep HTTPS)
 ```
 
-### Access Web Interface
+### First Access — via em1
 
-1. Connect your PC to the router's LAN port (em1)
-2. Set your PC to DHCP or use static IP: 192.168.1.100/24
-3. Open browser: `https://192.168.1.1`
-4. Login:
-   - Username: `root`
-   - Password: (the password you set during installation)
+Connect a laptop **directly to em1** (or through the Aruba switch if already cabled):
 
-**Note**: Your browser will warn about the self-signed certificate. This is normal - click "Advanced" and proceed.
+- Set laptop to static IP: `192.168.1.100 / 24`, gateway `192.168.1.1`
+- Open browser: `https://192.168.1.1`
+- Login: `root` / (password set during install)
+- Accept the self-signed certificate warning
+
+---
+
+## Step 1 (IMMEDIATE): Configure em3 Break-Glass Port
+
+> **Do this before configuring VLANs, firewall rules, bridging, or anything else.**
+> em3 is your safety net. Once configured, you can perform all subsequent work knowing
+> you have a physical out-of-band fallback if something goes wrong.
+
+em3 is an isolated emergency access port on its own subnet. It is physically separate
+from all other networks and provides web UI + SSH access to OPNsense only.
+
+**Normal state**: cable unplugged. Connect only during emergencies.
+
+### 1a — Assign em3
+
+**Navigation**: Interfaces → Assignments
+
+In the "New interface" dropdown at the bottom, select `em3`.
+Set description: `MGMT_Only`
+Click **+ Add** → **Save**
+
+### 1b — Configure em3 IP
+
+**Navigation**: Interfaces → [MGMT_Only]
+
+| Setting | Value |
+|---|---|
+| Enable | ✓ |
+| Description | `MGMT_Only` |
+| IPv4 Configuration Type | Static IPv4 |
+| IPv4 address | `192.168.99.1 / 29` |
+| Block private networks | ☐ off |
+| Block bogon networks | ☐ off |
+
+Click **Save** → **Apply Changes**
+
+Subnet:
+```
+Network:   192.168.99.0/29
+Gateway:   192.168.99.1   ← OPNsense (web UI + SSH)
+DHCP pool: 192.168.99.2 – 192.168.99.6   (5 leases max)
+Broadcast: 192.168.99.7
+```
+
+### 1c — Enable DHCP on em3
+
+**Navigation**: Services → Dnsmasq DNS & DHCP → DHCP ranges → **+**
+
+| Setting | Value |
+|---|---|
+| Interface | MGMT_Only |
+| Start | `192.168.99.2` |
+| End | `192.168.99.6` |
+| Gateway | `192.168.99.1` |
+| Lease time | `3600` (1 hour) |
+
+Click **Save** → **Apply**
+
+### 1d — Firewall rules for em3
+
+**Navigation**: Firewall → Rules → MGMT_Only
+
+Add two Pass rules and nothing else (default deny handles the rest):
+
+| Action | Protocol | Source | Destination | Port | Description |
+|--------|----------|--------|-------------|------|-------------|
+| Pass | TCP | MGMT_Only net | This Firewall | 443 | Break-glass HTTPS |
+| Pass | TCP | MGMT_Only net | This Firewall | 22 | Break-glass SSH |
+
+Click **Save** → **Apply Changes**
+
+> Do NOT add internet access or routes to internal networks. em3 reaches OPNsense only.
+> Do NOT add MGMT_Only to the `Management_Access` alias — these rules are separate from
+> the Tailscale-only floating rule mandate.
+
+### 1e — Verify
+
+Plug a laptop into **em3**. It should:
+1. Receive an IP in `192.168.99.2`–`.6` within seconds
+2. Reach `https://192.168.99.1` (cert warning expected — this is the local IP, not the Tailscale hostname)
+3. NOT be able to ping `192.168.1.1`, `192.168.10.x`, or any internet address
+
+Once verified, **unplug the cable** and set it aside.
+
+---
 
 ## Post-Installation Checklist
 
-- [ ] System accessible via web interface at https://192.168.1.1
-- [ ] WAN interface (em0) is up and has connectivity
-- [ ] LAN interface (em1) has IP 192.168.1.1
-- [ ] Root password is documented securely
-- [ ] Browser bookmarked for https://192.168.1.1
+- [ ] OPNsense 26.1 installed and accessible via em1 (https://192.168.1.1)
+- [ ] WAN (em0) is up and has internet connectivity
+- [ ] LAN (em1) IP is 192.168.1.1 /24
+- [ ] Root password recorded securely
+- [ ] **em3 break-glass configured** (192.168.99.1/29, DHCP .2-.6, firewall rules)
+- [ ] em3 verified — laptop gets IP and reaches https://192.168.99.1
+- [ ] em3 cable unplugged (stored nearby for emergencies)
+
+---
 
 ## Next Steps
 
-After completing installation:
-1. **IMPORTANT**: See [07_SECURITY_HARDENING.md](07_SECURITY_HARDENING.md) to create admin user and harden security
-2. See [02_VLAN_CONFIG.md](02_VLAN_CONFIG.md) for VLAN configuration
-3. See [05_OPNSENSE_PIHOLE_INTEGRATION.md](05_OPNSENSE_PIHOLE_INTEGRATION.md) for Pi-hole setup
+With em3 break-glass in place, work through the docs in order:
+
+### Access Setup (complete before VLANs or firewall rules)
+
+2. **Tailscale** → [02_TAILSCALE_SETUP.md](02_TAILSCALE_SETUP.md)
+   Install plugin, connect to tailnet, verify `opnsense.warthog-royal.ts.net` is reachable,
+   enable Tailscale HTTPS cert, mandate Tailscale-only web UI access.
+   After this step you have **two** out-of-band paths: em3 (physical) + Tailscale (remote).
+
+### Network Configuration
+
+3. **VLAN configuration** → [03_VLAN_CONFIG.md](03_VLAN_CONFIG.md)
+   VLANs, DHCP ranges (em3 break-glass is already done — skip that phase)
+
+4. **Switch configuration** → [04_SWITCH_CONFIG.md](04_SWITCH_CONFIG.md)
+   Aruba 2530-24G switch setup
+
+5. **Firewall rules** → [05_FIREWALL_RULES.md](05_FIREWALL_RULES.md)
+   Aliases, floating rules, per-interface rules
+
+6. **Pi-hole setup** → [06_PIHOLE_SETUP.md](06_PIHOLE_SETUP.md)
+   OPNsense integration — Dnsmasq DHCP, DNS option, firewall alias
+
+7. **UniFi AP setup** → [07_UNIFI_AP_SETUP.md](07_UNIFI_AP_SETUP.md)
+   AP adoption and SSID-to-VLAN mapping
+
+8. **Security hardening** → [08_SECURITY_HARDENING.md](08_SECURITY_HARDENING.md)
+   Admin user, root SSH, remaining hardening steps
+
+---
 
 ## Troubleshooting
 

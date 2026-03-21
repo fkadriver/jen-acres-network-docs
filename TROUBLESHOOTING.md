@@ -70,36 +70,36 @@ Consolidated troubleshooting for all network components.
 
 ---
 
-## Switch (NetGear GS310TP)
+## Switch (Aruba 2530-24G PoE+)
 
 ### Devices Can't Get IP Addresses
 
-**Cause**: Port not in correct VLAN or PVID incorrect
+**Cause**: Port not in correct VLAN or native VLAN incorrect
 
 **Solution**:
 1. Verify port is member of the VLAN
-2. Check PVID matches the VLAN ID
-3. Ensure port is set to "Untagged" for that VLAN
+2. Check that the correct VLAN is set to Untagged (native) on that port
+3. Ensure port is not still a member of VLAN 1 if it should be on a different VLAN
 
 ### Trunk Port Not Passing All VLANs
 
 **Cause**: VLANs not tagged on trunk port
 
 **Solution**:
-1. Go to VLAN Membership
-2. Select trunk port
-3. Add all VLANs as Tagged
-4. Verify "T" appears for each VLAN
+1. Go to VLAN → VLAN Management
+2. Select each VLAN and check Port 1 configuration
+3. All VLANs (10, 11, 20, 21) must be Tagged on Port 1
+4. VLAN 1 must be Untagged on Port 1
 
 ### UniFi AP Not Getting IP or Not Adopting
 
 **Cause**: Trunk port misconfigured or PoE not delivering power
 
 **Solution**:
-1. Verify PoE is enabled and delivering power (System → PoE → PoE Port Status)
-2. Check AP port (6 or 7) has correct VLAN membership (VLAN 11 untagged, 20/21 tagged)
-3. Verify PVID is set to 11 for AP ports
-4. Check DHCP is enabled on WIFI_SECURE interface in OPNsense
+1. Verify PoE is enabled and delivering power (PoE → PoE Status)
+2. Check AP port (6 or 7) has Native VLAN 10 (untagged) and VLANs 11, 20, 21 (tagged)
+3. Verify AP ports are NOT members of VLAN 1 (remove if present)
+4. Check DHCP is enabled on SERVERS interface in OPNsense (VLAN 10, 192.168.10.x)
 5. Verify firewall allows AP to reach UniFi Controller (port 8080)
 6. Try factory reset of AP (hold reset 10 seconds) and re-adopt
 
@@ -108,9 +108,16 @@ Consolidated troubleshooting for all network components.
 **Cause**: Management VLAN changed or port misconfigured
 
 **Solution**:
-1. Connect directly to switch using default VLAN 1
-2. Reset switch to factory defaults (hold reset button 10 seconds)
-3. Reconfigure switch from scratch
+1. Connect directly to switch Port 24 (Management Laptop port, VLAN 1)
+2. Reset switch to factory defaults (hold Clear button 10+ seconds)
+3. Reconfigure switch from scratch using [04_SWITCH_CONFIG.md](04_SWITCH_CONFIG.md)
+
+### Configuration Lost After Reboot
+
+**Cause**: Configuration not saved before reboot
+
+**Solution**:
+Run `write memory` after any configuration changes to persist settings across reboots.
 
 ---
 
@@ -249,6 +256,40 @@ nslookup google.com 192.168.10.10  # Test DNS resolution
 3. Verify UniFi controller is running: `ssh vm01 'docker ps | grep unifi'`
 4. Check controller logs: `ssh vm01 'docker compose -f /home/scott/git/unifi_controller/docker-compose.yml logs -f'`
 
+### APs Show "Timeout" Status (Connection Refused from AP to Controller)
+
+**Root cause (March 2026):** Tailscale on vm01 accepts OPNsense's advertised subnet
+route `192.168.0.0/20` into routing table 52 (priority 5270), which overrides the
+direct VLAN routes in the main table (priority 32766). Reply packets from vm01 to APs
+on 192.168.11.x are routed via `tailscale0` instead of `enp0s31f6`, so the APs never
+receive a response.
+
+**Symptoms:**
+- `mca-cli-op info` on AP shows `Status: Timeout (http://unifi:8080/inform)`
+- `curl http://192.168.10.21:8080/inform` from the AP hangs/times out
+- OPNsense and Pi-hole cannot ping or connect to vm01 (but vm01 can reach them)
+- `ip route get 192.168.10.1` on vm01 returns `dev tailscale0` instead of `dev enp0s31f6`
+
+**Fix:**
+```bash
+# Immediate (not persistent across reboots)
+sudo ip rule add to 192.168.0.0/20 priority 100 table main
+
+# Verify routing is correct
+ip route get 192.168.10.1   # should show dev enp0s31f6
+ip route get 192.168.11.x   # should show via 192.168.10.1 dev enp0s31f6
+
+# Re-trigger AP adoption
+nix-shell -p sshpass --run "sshpass -p ubnt ssh ubnt@<ap-ip> 'mca-cli-op set-inform http://192.168.10.21:8080/inform'"
+```
+
+**Permanent fix:** `networking.localCommands` in `~/git/nixos/hosts/vm01/default.nix`
+adds this ip rule on every boot. Run `sudo nixos-rebuild switch --flake ~/git/nixos#vm01`
+to apply.
+
+**SSH to factory-reset APs:** Use `mca-cli-op set-inform <url>` (not `set-inform`
+directly — that's a CLI builtin, not a shell command).
+
 ### Can't Access UniFi Web UI from WiFi_Secure
 
 1. Verify port 8443 is in AP_Communication alias
@@ -295,7 +336,10 @@ Verify all interfaces show:
 ## Related Documentation
 
 - [01_OPNSENSE_INSTALLATION.md](01_OPNSENSE_INSTALLATION.md) — Initial OPNsense setup
-- [02_VLAN_CONFIG.md](02_VLAN_CONFIG.md) — VLAN and interface configuration
-- [04_PIHOLE_SETUP.md](04_PIHOLE_SETUP.md) — Pi-hole DNS setup
-- [06_FLOATING_RULES.md](06_FLOATING_RULES.md) — Firewall rules reference
-- [10_UNIFI_AP_SETUP.md](10_UNIFI_AP_SETUP.md) — UniFi AP setup
+- [02_TAILSCALE_SETUP.md](02_TAILSCALE_SETUP.md) — Tailscale and HTTPS cert
+- [03_VLAN_CONFIG.md](03_VLAN_CONFIG.md) — VLAN and interface configuration
+- [04_SWITCH_CONFIG.md](04_SWITCH_CONFIG.md) — Aruba 2530-24G switch configuration
+- [05_FIREWALL_RULES.md](05_FIREWALL_RULES.md) — Firewall rules reference
+- [06_PIHOLE_SETUP.md](06_PIHOLE_SETUP.md) — Pi-hole DNS setup
+- [07_UNIFI_AP_SETUP.md](07_UNIFI_AP_SETUP.md) — UniFi AP setup
+- [08_SECURITY_HARDENING.md](08_SECURITY_HARDENING.md) — Security hardening

@@ -4,19 +4,20 @@ Configuration guide for Ubiquiti UniFi U6-Pro access points with VLAN-based mult
 
 ## Overview
 
-This upgrade replaces the dedicated router port WiFi architecture (Nighthawk MR70 on em2, Orbi on em3) with centrally-managed UniFi APs that support multiple VLANs via a single trunk connection.
+Centrally-managed UniFi APs supporting multiple VLANs via a single trunk connection to the Aruba 2530-24G PoE+ switch.
 
 **Benefits:**
 - Multiple SSIDs on one AP (WIFI_SECURE, GUEST, HomeAssist)
 - Centralized management via UniFi Controller
 - Better coverage with enterprise-grade APs
-- VLAN trunking eliminates need for dedicated router ports
+- VLAN trunking carries all wireless networks over a single uplink
 
 ## Hardware
 
-| Device | Quantity | Location | Switch Port |
-|--------|----------|----------|-------------|
-| UniFi U6-Pro | 2 | TBD | Port 6, Port 7 |
+| Device | Name | Location | Switch Port | IP | MAC |
+|--------|------|----------|-------------|-----|-----|
+| UniFi U6-Pro | U6Basement | Basement | Port 13 | 192.168.10.61 | 0c:ea:14:81:5c:75 |
+| UniFi U6-Pro | U6MainLevel | Main Level | Port 14 | 192.168.10.60 | 0c:ea:14:81:bc:31 |
 
 ### U6-Pro Specifications
 
@@ -27,36 +28,36 @@ This upgrade replaces the dedicated router port WiFi architecture (Nighthawk MR7
 
 ## PoE Requirements
 
-### NetGear GS310TP PoE+ Compatibility
+### HPE Aruba 2530-24G PoE+ Compatibility
 
-The GS310TP is a PoE+ switch supporting 802.3at on all 8 ports:
+The HPE Aruba 2530-24G PoE+ (J9773A) supports 802.3at on all 24 RJ45 ports with 195W total budget:
 
-| Specification | GS310TP | U6-Pro Requirement |
-|---------------|---------|-------------------|
-| PoE Standard | 802.3at (PoE+) | 802.3at (PoE+) |
+| Specification | HPE Aruba 2530-24G PoE+ | U6-Pro Requirement |
+|---------------|------------------------|-------------------|
+| PoE Standard | 802.3af/at (PoE+) | 802.3at (PoE+) |
 | Per-Port Power | Up to 30W | 13-21W |
-| Total PoE Budget | 55W | ~42W (2 APs max) |
+| Total PoE Budget | 195W | ~42W (2 APs) |
 
-**Compatibility: YES** - The GS310TP can power both U6-Pro APs directly.
+**Compatibility: YES** - The Aruba 2530-24G powers both U6-Pro APs on ports 13 and 14.
 
 ### Power Budget Calculation
 
 | Device | Port | Max Power |
 |--------|------|-----------|
-| U6-Pro #1 | Port 6 | 21W |
-| U6-Pro #2 | Port 7 | 21W |
+| U6-Pro #1 | Port 13 | 21W |
+| U6-Pro #2 | Port 14 | 21W |
 | **Total** | | **42W** |
-| **GS310TP Budget** | | **55W** |
-| **Remaining** | | **13W** |
+| **Aruba 2530-24G Budget** | | **195W** |
+| **Remaining** | | **153W** |
 
-**Note:** If you add PoE devices to other ports, monitor the total power budget in the switch management interface.
+**Note:** If you add PoE devices to other ports, monitor the total power budget under **PoE → PoE Status** in the switch web UI.
 
 ### Verify PoE Status
 
 After connecting APs:
 
-1. Go to: **System → PoE → PoE Port Configuration**
-2. Verify ports 6 and 7 show:
+1. Go to: **PoE → PoE Status** (or **PoE → PoE Configuration**)
+2. Verify ports 13 and 14 show:
    - Status: **Delivering Power**
    - Power Mode: **802.3at**
    - Power Drawn: ~13-21W each
@@ -84,35 +85,36 @@ After connecting APs:
                     │  Native: VLAN 1 (MGMT)            │                │
                     │  Tagged: 10, 11, 20, 21           │                │
                     │                                   │                │
-    em2 ────────────┤  (Available - was WIFI_SECURE)    │                │
+    em2 ────────────┤  (Unused)                         │                │
                     │                                   │                │
-    em3 ────────────┤  (Available - was GUEST)          │                │
+    em3 ────────────┤  Break-glass (192.168.99.0/29)   │                │
                     └───────────────────────────────────┘                │
                                                                          │
                     ┌────────────────────────────────────────────────────┘
                     │
               ┌─────▼────────────────────────────────────────────────┐
-              │              NetGear GS310TP Switch                   │
+              │       Aruba 2530-24G PoE+ (J9773A)                   │
               │                  192.168.1.2                         │
               ├──────────────────────────────────────────────────────┤
               │ Port 1:  Trunk to Router (VLANs 1,10,11,20,21)       │
-              │ Port 2:  Pi-hole Primary (VLAN 10)                   │
-              │ Port 3:  Pi-hole Backup (VLAN 10)                    │
-              │ Port 4:  NAS01 (VLAN 10)                             │
-              │ Port 5:  VM01 (VLAN 10)                              │
-              │ Port 6:  UniFi U6-Pro #1 - Trunk (VLANs 11,20,21)    │
-              │ Port 7:  UniFi U6-Pro #2 - Trunk (VLANs 11,20,21)    │
-              │ Port 8:  Management (VLAN 1)                         │
+              │ Port 2:  NAS01 (VLAN 10)                             │
+              │ Port 3:  Pi-hole Primary (VLAN 10)                   │
+              │ Port 4:  VM01 (VLAN 10)                              │
+              │ Port 5:  Pi-hole Backup (VLAN 10)                    │
+              │ Port 13: U6Basement  - Native VLAN 10, Tagged 11,20,21│
+              │ Port 14: U6MainLevel - Native VLAN 10, Tagged 11,20,21│
+              │ Port 24: Management Laptop (VLAN 1)                  │
+              │ Port 25: GS310TP dumb switch SFP (VLAN 11)          │
               └──────────────────────────────────────────────────────┘
                            │                    │
-                    ┌──────┴─────┐       ┌──────┴─────┐
-                    │ U6-Pro #1  │       │ U6-Pro #2  │
-                    │            │       │            │
-                    │ SSIDs:     │       │ SSIDs:     │
-                    │ - Secure   │       │ - Secure   │
-                    │ - Guest    │       │ - Guest    │
-                    │ - IoT      │       │ - IoT      │
-                    └────────────┘       └────────────┘
+                    ┌──────┴──────┐      ┌──────┴──────┐
+                    │ U6Basement  │      │ U6MainLevel │
+                    │ 10.61       │      │ 10.60       │
+                    │ SSIDs:      │      │ SSIDs:      │
+                    │ - Secure    │      │ - Secure    │
+                    │ - Guest     │      │ - Guest     │
+                    │ - IoT       │      │ - IoT       │
+                    └─────────────┘      └─────────────┘
 ```
 
 ## UniFi Controller Setup
@@ -255,68 +257,35 @@ Create networks for each VLAN:
 
 ## AP Adoption
 
-### Method 1: Layer 2 Discovery (Same Subnet)
+### Management Network: VLAN 10 (SERVERS)
 
-If the controller and APs are on the same subnet initially:
+APs are managed on VLAN 10 (native/untagged on switch ports 13-14), placing them on the same subnet as the UniFi controller (192.168.10.21). This enables reliable L2 discovery with no cross-VLAN firewall rules required.
 
-1. Connect APs to switch (ports 6-7)
-2. APs appear in controller under **Devices**
-3. Click **Adopt** for each AP
-4. Wait for provisioning to complete
+DHCP Option 43 (`http://192.168.10.21:8080/inform`) is set globally in OPNsense dnsmasq, so APs auto-discover the controller on first boot.
 
-### Method 2: Layer 3 Adoption (Different Subnet)
+### Adoption Steps
 
-Since APs will be on VLAN 11 and controller on VLAN 10:
+1. Connect APs to switch ports 13 and 14 (PoE powers them)
+2. APs boot and get IPs on VLAN 10 (192.168.10.x) via DHCP
+3. APs auto-inform the controller via DHCP Option 43
+4. Open controller: `https://192.168.10.21:8443`
+5. **Devices** → **Adopt** each AP
+6. Wait for provisioning (~2 min per AP)
 
-#### Option A: SSH Adoption
+### Static DHCP Reservations (OPNsense dnsmasq)
 
-1. Find AP IP address (check DHCP leases in OPNsense)
-2. SSH to AP:
-   ```bash
-   ssh ubnt@<ap-ip>
-   # Default password: ubnt
-   ```
-3. Set inform URL:
-   ```bash
-   set-inform http://192.168.10.x:8080/inform
-   ```
-   (Replace `192.168.10.x` with your controller IP)
+Set fixed IPs so APs always get the same address:
 
-#### Option B: DHCP Option 43
+| Name | IP | MAC |
+|------|----|-----|
+| U6Basement | 192.168.10.61 | 0c:ea:14:81:5c:75 |
+| U6MainLevel | 192.168.10.60 | 0c:ea:14:81:bc:31 |
 
-Configure OPNsense to provide UniFi controller IP via DHCP Option 43:
+**OPNsense:** Services → Dnsmasq → Static Leases → add both entries.
 
-1. **Services** → **Dnsmasq DNS & DHCP** → **DHCP options**
-2. Add option for WIFI_SECURE interface:
-   - **Type**: Set
-   - **Option**: 43
-   - **Value**: `01:04:C0:A8:0A:0X` (hex-encoded controller IP)
+### Firewall Notes
 
-   To encode IP `192.168.10.20`:
-   - `01` = suboption 1 (UniFi controller)
-   - `04` = length (4 bytes)
-   - `C0:A8:0A:14` = 192.168.10.20 in hex
-
-#### Option C: DNS Record
-
-Create DNS record in Pi-hole:
-
-1. **Local DNS** → **DNS Records**
-2. Add: `unifi` → `192.168.10.x` (controller IP)
-
-APs look for `unifi` hostname during discovery.
-
-### Firewall Rules for Adoption
-
-Ensure OPNsense allows AP-to-controller communication:
-
-**Firewall** → **Rules** → **WIFI_SECURE** (or Floating Rules)
-
-| Action | Source | Destination | Port | Description |
-|--------|--------|-------------|------|-------------|
-| Pass | WIFI_SECURE net | Controller IP | 8080/TCP | UniFi device inform |
-| Pass | WIFI_SECURE net | Controller IP | 3478/UDP | STUN |
-| Pass | WIFI_SECURE net | Controller IP | 10001/UDP | Device discovery |
+No additional firewall rules are needed — APs and controller are on the same VLAN 10 subnet. The floating rule "Allow AP to connect to UniFi" (WIFI_SECURE → controller) is disabled and can be removed.
 
 ## Post-Adoption Configuration
 
@@ -326,7 +295,7 @@ For each adopted AP:
 
 1. **Devices** → Click AP → **Settings**
 2. **General**:
-   - Name: `U6-Pro-Location1`, `U6-Pro-Location2`
+   - Name: `U6Basement`, `U6MainLevel`
 3. **Radios**:
    - 2.4 GHz: Channel width 20 MHz, auto channel
    - 5 GHz: Channel width 80 MHz, auto channel
@@ -399,27 +368,10 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#unifi-access-points) for UniFi AP is
 - **Statistics**: Historical data
 - **Alerts**: Configure email notifications
 
-## Migration Notes
-
-### Retiring Old Equipment
-
-After UniFi APs are operational:
-
-1. **Nighthawk MR70** (was on em2): Can be repurposed or retired
-2. **Orbi** (was on em3): Can be repurposed or retired
-3. **Router ports em2, em3**: Now available for other uses
-
-### Clients Migration
-
-1. Update saved WiFi credentials on all devices
-2. Forget old SSIDs to force reconnection
-3. IoT devices may need factory reset to connect to new SSID
-
 ## Summary
 
 After completing this setup:
 - 2x UniFi U6-Pro APs managed by UniFi Controller
 - 3 SSIDs mapped to VLANs 11, 20, 21
-- PoE powered via GS310TP switch
+- PoE powered via Aruba 2530-24G PoE+ switch (J9773A), ports 13 and 14
 - Centralized management and monitoring
-- Router ports em2/em3 freed for other uses
