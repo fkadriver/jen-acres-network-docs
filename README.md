@@ -1,6 +1,6 @@
 # Home Network Configuration - OPNsense
 
-Complete network configuration for x86 quad-port router running **OPNsense 25.7** (FreeBSD-based) with VLAN segmentation, Pi-hole DNS filtering, Tailscale subnet routing, and comprehensive security policies.
+Complete network configuration for x86 quad-port router running **OPNsense 26.1** (FreeBSD-based) with VLAN segmentation, Pi-hole DNS filtering, Tailscale subnet routing, and comprehensive security policies.
 
 > **Note**: Previous OpenWRT configurations are preserved in [`archive/openwrt/`](archive/openwrt/) for reference.
 
@@ -17,10 +17,12 @@ Complete network configuration for x86 quad-port router running **OPNsense 25.7*
 | 192.168.11.0/24 | WIFI_SECURE | em1 (VLAN 11 trunk) | Wireless Secured | Secure_Net | Enabled | Router: .1 |
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20 trunk) | Guest Access | Unsecure_Net | Enabled | Router: .1 |
 | 192.168.21.0/24 | HomeAssist | em1 (VLAN 21 trunk) | Home Automation/IoT | Unsecure_Net | Enabled | Router: .1 |
+| 192.168.30.0/24 | Cailin | em1 (VLAN 30 trunk) | Personal (Cailin) | Unsecure_Net | Enabled | Router: .1 |
+| 192.168.254.0/24 | DMZ | Switch port 23 | DMZ — direct modem, bypasses router | — | Modem (.254) | From modem |
 
 **Supernet Aliases (for simplified firewall rules):**
 - **Secure_Net**: 192.168.0.0/20 (MGMT, SERVERS, WIFI_SECURE)
-- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist)
+- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist, Cailin)
 
 **WAN**: 192.168.254.0/24 (DHCP from 192.168.254.254)
 
@@ -31,15 +33,21 @@ Complete network configuration for x86 quad-port router running **OPNsense 25.7*
   - 4GB RAM, 32GB mSATA SSD
   - 4x Intel Gigabit Ethernet ports:
     - `em0`: WAN (to ISP modem/router)
-    - `em1`: LAN/MGMT (VLAN trunk to managed switch - carries all VLANs)
-    - `em2`: Available
-    - `em3`: Available
-- **Switch**: NetGear GS310TP (192.168.1.2, managed, VLAN-capable, PoE+)
-  - Port 1: Router trunk (VLANs 1, 10, 11, 20, 21)
-  - Ports 2-4: Servers (VLAN 10)
-  - Ports 6-7: UniFi APs (VLANs 11, 20, 21) - PoE+ powered
+    - `em1`: LAN/trunk (to Aruba switch — carries all VLANs)
+    - `em2`: Unused
+    - `em3`: Break-glass emergency access (192.168.99.0/29)
+- **Switch**: HPE Aruba 2530-24G PoE+ J9773A (192.168.1.2, managed, VLAN-capable, 195W PoE+)
+  - Port 1: Router trunk (VLANs 1, 10, 11, 20, 21, 30)
+  - Port 2: NAS01 (VLAN 10)
+  - Ports 3, 5: Pi-holes (VLAN 10)
+  - Port 4: VM01 (VLAN 10)
+  - Ports 13-14: UniFi APs (PoE+, trunk VLANs 10/11/20/21)
+  - Port 23: DSL Modem (VLAN 250 DMZ — bypasses router)
+  - Port 24: Management Laptop (VLAN 1)
+  - Port 25 (SFP): NetGear GS310TP dumb switch (VLAN 11)
 - **WiFi**: 2x Ubiquiti UniFi U6-Pro (802.11ax, PoE+ powered via switch)
-  - Managed via UniFi Network Controller
+  - U6Basement (192.168.10.61, port 13), U6MainLevel (192.168.10.60, port 14)
+  - Managed via UniFi Controller on vm01 (192.168.10.21)
   - SSIDs: Secure (VLAN 11), Guest (VLAN 20), IoT (VLAN 21)
 - **Pi-hole Primary**: Raspberry Pi 4 (192.168.10.10, DNS server)
 - **Pi-hole Backup**: Raspberry Pi 3 (192.168.10.11, redundant DNS server)
@@ -63,18 +71,14 @@ Complete network configuration for x86 quad-port router running **OPNsense 25.7*
 
 ## Quick Start
 
-**⚠️ IMPORTANT**: Configure your **switch for VLANs FIRST** before configuring VLANs on the router. See [docs/03_SWITCH_CONFIG.md](docs/03_SWITCH_CONFIG.md).
-
-1. **Install OPNsense**: See [docs/01_OPNSENSE_INSTALLATION.md](docs/01_OPNSENSE_INSTALLATION.md)
-2. **Configure VLANs**: See [docs/02_VLAN_CONFIG.md](docs/02_VLAN_CONFIG.md)
-3. **Configure Switch**: See [docs/03_SWITCH_CONFIG.md](docs/03_SWITCH_CONFIG.md)
-4. **Setup Pi-hole**: See [docs/04_PIHOLE_SETUP.md](docs/04_PIHOLE_SETUP.md)
-5. **Integrate Pi-hole with OPNsense**: See [docs/05_OPNSENSE_PIHOLE_INTEGRATION.md](docs/05_OPNSENSE_PIHOLE_INTEGRATION.md)
-6. **Configure Floating Rules**: See [docs/06_FLOATING_RULES.md](docs/06_FLOATING_RULES.md)
-7. **Security Hardening**: See [docs/07_SECURITY_HARDENING.md](docs/07_SECURITY_HARDENING.md)
-8. **Setup Tailscale Subnet Router**: See [docs/08_TAILSCALE_SETUP.md](docs/08_TAILSCALE_SETUP.md)
-9. **Enable HTTPS Certificates**: See [docs/09_TAILSCALE_HTTPS.md](docs/09_TAILSCALE_HTTPS.md) (optional)
-10. **Setup UniFi Access Points**: See [docs/10_UNIFI_AP_SETUP.md](docs/10_UNIFI_AP_SETUP.md)
+1. **Install OPNsense** → [docs/01_OPNSENSE_INSTALLATION.md](docs/01_OPNSENSE_INSTALLATION.md)
+2. **Setup Tailscale** → [docs/02_TAILSCALE_SETUP.md](docs/02_TAILSCALE_SETUP.md)
+3. **Configure VLANs** → [docs/03_VLAN_CONFIG.md](docs/03_VLAN_CONFIG.md)
+4. **Configure Switch** → [docs/04_SWITCH_CONFIG.md](docs/04_SWITCH_CONFIG.md) — Aruba 2530-24G switch setup
+5. **Firewall rules** → [docs/05_FIREWALL_RULES.md](docs/05_FIREWALL_RULES.md)
+6. **Pi-hole setup** → [docs/06_PIHOLE_SETUP.md](docs/06_PIHOLE_SETUP.md)
+7. **UniFi AP setup** → [docs/07_UNIFI_AP_SETUP.md](docs/07_UNIFI_AP_SETUP.md)
+8. **Security hardening** → [docs/08_SECURITY_HARDENING.md](docs/08_SECURITY_HARDENING.md)
 
 ## Repository Structure
 
@@ -83,15 +87,14 @@ Complete network configuration for x86 quad-port router running **OPNsense 25.7*
 ├── README.md                              # This file
 ├── docs/                                  # Documentation (numbered for order)
 │   ├── 01_OPNSENSE_INSTALLATION.md        # OPNsense installation guide
-│   ├── 02_VLAN_CONFIG.md                  # VLAN configuration
-│   ├── 03_SWITCH_CONFIG.md                # NetGear GS310TP switch configuration
-│   ├── 04_PIHOLE_SETUP.md                 # Pi-hole setup (primary + backup, iOS app, syslog)
-│   ├── 05_OPNSENSE_PIHOLE_INTEGRATION.md  # Pi-hole DNS integration with OPNsense
-│   ├── 06_FLOATING_RULES.md               # Floating firewall rules
-│   ├── 07_SECURITY_HARDENING.md           # Security hardening (users, SSH, 2FA)
-│   ├── 08_TAILSCALE_SETUP.md              # Tailscale subnet router, tags, logging
-│   ├── 09_TAILSCALE_HTTPS.md              # Tailscale HTTPS certificates
-│   └── 10_UNIFI_AP_SETUP.md               # UniFi U6-Pro access point setup
+│   ├── 02_TAILSCALE_SETUP.md              # Tailscale subnet router, tags, logging
+│   ├── 03_VLAN_CONFIG.md                  # VLAN configuration
+│   ├── 04_SWITCH_CONFIG.md                # HPE Aruba 2530-24G switch configuration
+│   ├── 05_FIREWALL_RULES.md               # Firewall rules reference
+│   ├── 06_PIHOLE_SETUP.md                 # Pi-hole setup (primary + backup, iOS app, syslog)
+│   ├── 07_UNIFI_AP_SETUP.md               # UniFi U6-Pro access point setup
+│   ├── 08_SECURITY_HARDENING.md           # Security hardening (users, SSH, 2FA)
+│   └── TROUBLESHOOTING.md                 # Consolidated troubleshooting guide
 ├── tailnet/                               # Tailscale ACL policy (git submodule)
 │   ├── policy.hujson                      # Tailscale ACL configuration
 │   └── README.md                          # ACL documentation
