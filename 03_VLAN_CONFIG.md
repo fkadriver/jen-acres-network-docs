@@ -18,6 +18,8 @@
 | 192.168.11.0/24 | WIFI_SECURE | em1 (VLAN 11) | Wireless Secured | Secure_Net | 192.168.11.1 | 11.100-11.250 |
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20) | Guest Access | Unsecure_Net | 192.168.20.1 | 20.100-20.250 |
 | 192.168.21.0/24 | HomeAssist | em1 (VLAN 21) | HomeAssist/IoT | Unsecure_Net | 192.168.21.1 | 21.100-21.250 |
+| 192.168.30.0/24 | Cailin | em1 (VLAN 30) | Personal (Cailin) | Unsecure_Net | 192.168.30.1 | 30.100-30.250 |
+| 192.168.254.0/24 | DMZ | Switch port 23 | DMZ — direct modem, bypasses router | — | Modem (.254) | From modem |
 | 192.168.99.0/29 | MGMT_Only | em3 (isolated) | Break-glass emergency | — | 192.168.99.1 | 99.2-99.6 |
 
 ## Physical Topology
@@ -31,7 +33,7 @@
      (Intel I211)   │                                   │
                     │   em1: VLAN Trunk                 │
     Aruba──em1──────┤   Native: VLAN 1 (MGMT)          │
-     (Intel I211)   │   Tagged: 10, 11, 20, 21          │
+     (Intel I211)   │   Tagged: 10, 11, 20, 21, 30      │
                     │                                   │
                     │   em2: Unused                     │
                     │                                   │
@@ -46,13 +48,14 @@
     │      HPE Aruba 2530-24G PoE+  (J9773A)         │
     │              192.168.1.2                        │
     ├─────────────────────────────────────────────────┤
-    │ Port 1:  Trunk → em1 (VLANs 1,10,11,20,21)     │
+    │ Port 1:  Trunk → em1 (VLANs 1,10,11,20,21,30)  │
     │ Port 2:  NAS01         (VLAN 10)                │
     │ Port 3:  Pi-hole Primary (VLAN 10)              │
     │ Port 4:  VM01          (VLAN 10)                │
     │ Port 5:  Pi-hole Backup  (VLAN 10)              │
     │ Port 13: U6Basement PoE+ (VLAN 10+11+20+21)    │
     │ Port 14: U6MainLevel PoE+(VLAN 10+11+20+21)    │
+    │ Port 23: DSL Modem     (VLAN 250 DMZ)           │
     │ Port 24: Mgmt Laptop   (VLAN 1)                 │
     │ Port 25: NetGear (SFP) (VLAN 11)               │
     └─────────────────────────────────────────────────┘
@@ -99,7 +102,15 @@ Create VLANs for all tagged networks. **Use `em1` as the parent interface**.
 - **Description**: HomeAssist
 - Click **Save**
 
-**Verify**: You should see 4 VLANs listed: `em1_vlan10`, `em1_vlan11`, `em1_vlan20`, `em1_vlan21`
+### VLAN 30 - Cailin
+- **Parent Interface**: em1
+- **VLAN tag**: 30
+- **Description**: Cailin
+- Click **Save**
+
+> **VLAN 250 (DMZ)**: No OPNsense interface needed — VLAN 250 is handled entirely at the switch level (port 23). Devices get IPs directly from the modem (192.168.254.x) and bypass the router.
+
+**Verify**: You should see 5 VLANs listed: `em1_vlan10`, `em1_vlan11`, `em1_vlan20`, `em1_vlan21`, `em1_vlan30`
 
 ---
 
@@ -135,8 +146,9 @@ After adding all interfaces:
 | [OPT2]    | opt2       | em1 VLAN 11 (WIFI_SECURE) |
 | [OPT3]    | opt3       | em1 VLAN 20 (GUEST) |
 | [OPT4]    | opt4       | em1 VLAN 21 (HomeAssist) |
-| [OPT5]    | opt5       | tailscale0 (Tailscale VPN) |
-| [OPT6]    | opt6       | em3 — Break-glass (MGMT_Only) *(configured in 01_OPNSENSE_INSTALLATION.md)* |
+| [OPT5]    | opt5       | em1 VLAN 30 (Cailin) |
+| [OPT6]    | opt6       | tailscale0 (Tailscale VPN) |
+| [OPT7]    | opt7       | em3 — Break-glass (MGMT_Only) *(configured in 01_OPNSENSE_INSTALLATION.md)* |
 
 Click **Save**
 
@@ -183,6 +195,12 @@ Click **Save** → **Apply Changes**
 - **Description**: HomeAssist
 - **IPv4 address**: 192.168.21.1 / 24
 
+### OPT5 (Cailin - VLAN 30)
+
+- **Enable**: ✓
+- **Description**: Cailin
+- **IPv4 address**: 192.168.30.1 / 24
+
 ---
 
 ## Phase 4: Configure DHCP Services (Dnsmasq)
@@ -222,7 +240,12 @@ Click **Save** → **Apply**
 #### HomeAssist (VLAN 21)
 - **Interface**: HomeAssist | **Start**: 192.168.21.100 | **End**: 192.168.21.250 | **Lease**: 86400
 
+#### Cailin (VLAN 30)
+- **Interface**: Cailin | **Start**: 192.168.30.100 | **End**: 192.168.30.250 | **Lease**: 86400
+
 > **MGMT (VLAN 1)**: Do NOT enable DHCP — all management devices use static IPs.
+
+> **DMZ (VLAN 250)**: No DHCP configured in OPNsense — devices on VLAN 250 receive IPs directly from the DSL modem (192.168.254.x).
 
 #### MGMT_Only (em3 — Break-Glass)
 - **Interface**: MGMT_Only | **Start**: 192.168.99.2 | **End**: 192.168.99.6 | **Lease**: 3600
@@ -297,6 +320,7 @@ ping 192.168.10.1   # SERVERS
 ping 192.168.11.1   # WIFI_SECURE
 ping 192.168.20.1   # GUEST
 ping 192.168.21.1   # HomeAssist
+ping 192.168.30.1   # Cailin
 ```
 
 ### 3. Verify VLAN Interfaces

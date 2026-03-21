@@ -19,7 +19,7 @@
 
 | Port | Device | Mode | VLAN |
 |------|--------|------|------|
-| 1 | Router (em1) | Trunk | Native VLAN 1; Tagged 10, 11, 20, 21 |
+| 1 | Router (em1) | Trunk | Native VLAN 1; Tagged 10, 11, 20, 21, 30 |
 | 2 | NAS01 | Access | VLAN 10 |
 | 3 | Pi-hole Primary | Access | VLAN 10 |
 | 4 | VM01 | Access | VLAN 10 |
@@ -27,7 +27,8 @@
 | 6-12 | Available | — | — |
 | 13 | U6Basement AP (PoE+) | Trunk | Native VLAN 10; Tagged 11, 20, 21 |
 | 14 | U6MainLevel AP (PoE+) | Trunk | Native VLAN 10; Tagged 11, 20, 21 |
-| 15-23 | Available | — | — |
+| 15-22 | Available | — | — |
+| 23 | DSL Modem | Access | VLAN 250 (DMZ — direct modem, bypasses router) |
 | 24 | Management Laptop | Access | VLAN 1 |
 | 25 | NetGear GS310TP (SFP uplink) | Access | VLAN 11 |
 | 26 | Available (SFP) | — | — |
@@ -36,20 +37,21 @@
 
 ## VLAN Membership Matrix
 
-| Port | VLAN 1 | VLAN 10 | VLAN 11 | VLAN 20 | VLAN 21 |
-|------|--------|---------|---------|---------|---------|
-| 1 (Router) | **U** | T | T | T | T |
-| 2 (NAS01) | — | **U** | — | — | — |
-| 3 (Pi-hole 1) | — | **U** | — | — | — |
-| 4 (VM01) | — | **U** | — | — | — |
-| 5 (Pi-hole 2) | — | **U** | — | — | — |
-| 6-12 (Available) | **U** | — | — | — | — |
-| 13 (U6Basement) | — | **U** | T | T | T |
-| 14 (U6MainLevel) | — | **U** | T | T | T |
-| 15-23 (Available) | **U** | — | — | — | — |
-| 24 (Mgmt Laptop) | **U** | — | — | — | — |
-| 25 (NetGear SFP) | — | — | **U** | — | — |
-| 26 (SFP unused) | — | — | — | — | — |
+| Port | VLAN 1 | VLAN 10 | VLAN 11 | VLAN 20 | VLAN 21 | VLAN 30 | VLAN 250 |
+|------|--------|---------|---------|---------|---------|---------|----------|
+| 1 (Router) | **U** | T | T | T | T | T | — |
+| 2 (NAS01) | — | **U** | — | — | — | — | — |
+| 3 (Pi-hole 1) | — | **U** | — | — | — | — | — |
+| 4 (VM01) | — | **U** | — | — | — | — | — |
+| 5 (Pi-hole 2) | — | **U** | — | — | — | — | — |
+| 6-12 (Available) | **U** | — | — | — | — | — | — |
+| 13 (U6Basement) | — | **U** | T | T | T | — | — |
+| 14 (U6MainLevel) | — | **U** | T | T | T | — | — |
+| 15-22 (Available) | **U** | — | — | — | — | — | — |
+| 23 (DSL Modem) | — | — | — | — | — | — | **U** |
+| 24 (Mgmt Laptop) | **U** | — | — | — | — | — | — |
+| 25 (NetGear SFP) | — | — | **U** | — | — | — | — |
+| 26 (SFP unused) | — | — | — | — | — | — | — |
 
 U = Untagged (native), T = Tagged, — = Not a member
 
@@ -115,6 +117,8 @@ Note that the Aruba 2530 web UI calls this "VLAN Management". Navigation paths u
 | 11 | WiFi_Secure |
 | 20 | Guest |
 | 21 | HomeAuto |
+| 30 | Cailin |
+| 250 | DMZ |
 
 ### Step 2: Configure Port 1 — Router Trunk (all VLANs)
 
@@ -131,6 +135,7 @@ For Port 1, set:
 | 11 | Tagged |
 | 20 | Tagged |
 | 21 | Tagged |
+| 30 | Tagged |
 
 ### Step 3: Configure Ports 2, 3, 4, 5 — Server Access (VLAN 10)
 
@@ -153,11 +158,28 @@ For each AP port, VLAN 10 native + tagged 11, 20, 21:
 | 20 | Tagged |
 | 21 | Tagged |
 
-### Step 5: Configure Port 24 — Management Laptop (VLAN 1 access)
+### Step 5: Configure Port 23 — DSL Modem (VLAN 250 DMZ)
+
+| VLAN | Port 23 |
+|------|---------|
+| 1 | No |
+| 250 | Untagged |
+
+> Port 23 connects directly to the DSL modem. Devices on VLAN 250 receive IPs from the modem's DHCP (192.168.254.x) and bypass the Protectli router entirely.
+
+### Step 6: Configure VLAN 30 (Cailin) on Port 1
+
+VLAN 30 is routed through the Protectli (em1 trunk). Add it to Port 1:
+
+| VLAN | Port 1 Setting |
+|------|---------------|
+| 30 | Tagged |
+
+### Step 7: Configure Port 24 — Management Laptop (VLAN 1 access)
 
 Port 24 stays on default VLAN 1 Untagged — no change needed (default).
 
-### Step 6: Configure Port 25 (SFP) — NetGear Dumb Switch (VLAN 11)
+### Step 8: Configure Port 25 (SFP) — NetGear Dumb Switch (VLAN 11)
 
 | VLAN | Port 25 |
 |------|---------|
@@ -180,13 +202,18 @@ vlan 20
   name "Guest"
 vlan 21
   name "HomeAuto"
+vlan 30
+  name "Cailin"
+vlan 250
+  name "DMZ"
 
-# Port 1 — Router trunk
+# Port 1 — Router trunk (all internal VLANs; VLAN 250 stays off router)
 vlan 1 untagged 1
 vlan 10 tagged 1
 vlan 11 tagged 1
 vlan 20 tagged 1
 vlan 21 tagged 1
+vlan 30 tagged 1
 
 # Ports 2,3,4,5 — Server access (VLAN 10)
 no vlan 1 untagged 2-5
@@ -199,11 +226,15 @@ vlan 11 tagged 13-14
 vlan 20 tagged 13-14
 vlan 21 tagged 13-14
 
+# Port 23 — DSL modem (VLAN 250 DMZ, bypasses router)
+no vlan 1 untagged 23
+vlan 250 untagged 23
+
 # Port 25 (SFP) — NetGear dumb switch (VLAN 11 access)
 no vlan 1 untagged 25
 vlan 11 untagged 25
 
-# Ports 6-12, 15-23 stay on VLAN 1 (default) — available
+# Ports 6-12, 15-22 stay on VLAN 1 (default) — available
 
 # Save
 write memory
@@ -239,13 +270,15 @@ show poe status
 
 Expected VLAN summary:
 
-| ID | Untagged | Tagged |
-|----|----------|--------|
-| 1 | 1, 6-12, 15-24 | — |
-| 10 | 2, 3, 4, 5, 13, 14 | 1 |
-| 11 | 25 | 1, 13, 14 |
-| 20 | — | 1, 13, 14 |
-| 21 | — | 1, 13, 14 |
+| ID | Name | Untagged | Tagged |
+|----|------|----------|--------|
+| 1 | MGMT | 1, 6-12, 15-22, 24 | — |
+| 10 | Servers | 2, 3, 4, 5, 13, 14 | 1 |
+| 11 | WiFi_Secure | 25 | 1, 13, 14 |
+| 20 | Guest | — | 1, 13, 14 |
+| 21 | HomeAuto | — | 1, 13, 14 |
+| 30 | Cailin | — | 1 |
+| 250 | DMZ | 23 | — |
 
 ---
 
