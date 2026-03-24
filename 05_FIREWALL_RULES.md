@@ -459,35 +459,19 @@ With floating rules handling security policies, per-interface rules become **ver
 
 ---
 
-### SERVERS (OPT1) Interface Rules
+### SERVERS (OPT1) and WIFI_SECURE (OPT2) Interface Rules
 
-**Navigate:** Firewall → Rules → SERVERS
+Both Secure_Net interfaces use the same single rule — floating rules handle MGMT and ISP modem protection.
 
-**Rule 1: Allow SERVERS to Any**
+**Navigate:** Firewall → Rules → [interface]
+
+**Rule 1: Allow to Any**
 - **Action**: Pass
-- **Interface**: SERVERS
+- **Interface**: SERVERS *(repeat for WIFI_SECURE)*
 - **Protocol**: any
-- **Source**: SERVERS net
+- **Source**: *[interface]* net
 - **Destination**: any
-- **Description**: `Allow servers internet and LAN access (MGMT blocked by floating rule)`
-
-**Click:** Save → Apply Changes
-
-**Note:** The floating rule automatically blocks SERVERS → MGMT, so we don't need a specific block rule here.
-
----
-
-### WIFI_SECURE (OPT2) Interface Rules
-
-**Navigate:** Firewall → Rules → WIFI_SECURE
-
-**Rule 1: Allow WiFi to Any**
-- **Action**: Pass
-- **Interface**: WIFI_SECURE
-- **Protocol**: any
-- **Source**: WIFI_SECURE net
-- **Destination**: any
-- **Description**: `Allow WiFi devices internet and server access (MGMT blocked by floating rule)`
+- **Description**: `Allow internet and LAN access (MGMT blocked by floating rule)`
 
 **Click:** Save → Apply Changes
 
