@@ -479,17 +479,13 @@ With floating rules handling security policies, per-interface rules become **ver
 
 **Navigate:** Firewall → Rules → MGMT (or LAN)
 
-MGMT_LAN is a local-link only network. No default gateway is issued via DHCP — laptops plugged in use WiFi for all routed traffic. Only the router itself requires a firewall rule; the switch (192.168.1.2) is on the same subnet and reached via L2 directly without passing through the firewall.
-
-**Rule 1: Allow MGMT to This Firewall**
+**Rule 1: Allow MGMT to All**
 - **Action**: Pass
 - **Interface**: MGMT
 - **Protocol**: any
 - **Source**: MGMT net
-- **Destination**: This Firewall
-- **Description**: `Allow MGMT to router (web UI, SSH)`
-
-> Default deny blocks all routed traffic. The switch is reachable via L2 (same subnet) — no rule needed for it.
+- **Destination**: any
+- **Description**: `Allow management network full access`
 
 **Click:** Save → Apply Changes
 
@@ -680,13 +676,13 @@ These should be auto-generated. If missing, click **Save** to regenerate.
 
 | Source Network | Can Access Internet | Can Access Pi-hole | Can Access SERVERS | Can Access WIFI_SECURE | Can Access MGMT | Can Access WAN_Net | Can Access GUEST |
 |----------------|--------------------|--------------------|-------------------|----------------------|----------------|-------------------|----------------|
-| **MGMT** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **MGMT** | ✅ (via Tailscale) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **SERVERS** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **WIFI_SECURE** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **GUEST** | ✅ | ✅ (DNS only) | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 **Key Points:**
-- ✅ **MGMT**: Router and switch only — no internet, no cross-VLAN access, no ISP modem
+- ✅ **MGMT**: Full access to everything (management network + ISP modem)
 - ✅ **Secure_Net** (SERVERS, WIFI_SECURE): Can access each other, internet, but not MGMT or WAN_Net
 - ❌ **Unsecure_Net** (GUEST): Internet + DNS only, fully isolated from Secure_Net, MGMT, WAN_Net
 
