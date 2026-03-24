@@ -12,7 +12,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.1*
 
 | Network | Interface | Port | Purpose | Supernet | DHCP | Key IPs |
 |---------|-----------|------|---------|----------|------|---------|
-| 192.168.1.0/24 | MGMT | em1 (VLAN 1 trunk) | Management | Secure_Net | Disabled | Router: .1, Switch: .2 |
+| 192.168.1.0/24 | MGMT | em1 (VLAN 1 trunk) | Management (local-link only) | Secure_Net | None (no GW issued) | Router: .1, Switch: .2 |
 | 192.168.10.0/24 | SERVERS | em1 (VLAN 10 trunk) | Server Infrastructure | Secure_Net | Enabled | Router: .1, Pi-hole: .10, .11 |
 | 192.168.11.0/24 | WIFI_SECURE | em1 (VLAN 11 trunk) | Wireless Secured | Secure_Net | Enabled | Router: .1 |
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20 trunk) | Guest Access | Unsecure_Net | Enabled | Router: .1 |

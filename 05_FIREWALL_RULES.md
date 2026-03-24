@@ -479,7 +479,7 @@ With floating rules handling security policies, per-interface rules become **ver
 
 **Navigate:** Firewall → Rules → MGMT (or LAN)
 
-MGMT is restricted to the router and switch only — no access to other VLANs, internet, or ISP network.
+MGMT_LAN is a local-link only network. No default gateway is issued via DHCP — laptops plugged in use WiFi for all routed traffic. Only the router itself requires a firewall rule; the switch (192.168.1.2) is on the same subnet and reached via L2 directly without passing through the firewall.
 
 **Rule 1: Allow MGMT to This Firewall**
 - **Action**: Pass
@@ -487,17 +487,9 @@ MGMT is restricted to the router and switch only — no access to other VLANs, i
 - **Protocol**: any
 - **Source**: MGMT net
 - **Destination**: This Firewall
-- **Description**: `Allow MGMT to router (web UI, SSH, DNS)`
+- **Description**: `Allow MGMT to router (web UI, SSH)`
 
-**Rule 2: Allow MGMT to Switch**
-- **Action**: Pass
-- **Interface**: MGMT
-- **Protocol**: any
-- **Source**: MGMT net
-- **Destination**: Single host → `192.168.1.2`
-- **Description**: `Allow MGMT to Aruba switch`
-
-> Default deny blocks all other traffic from MGMT. No internet, no cross-VLAN access.
+> Default deny blocks all routed traffic. The switch is reachable via L2 (same subnet) — no rule needed for it.
 
 **Click:** Save → Apply Changes
 

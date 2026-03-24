@@ -13,7 +13,7 @@
 
 | Network | Interface | Physical | Purpose | Supernet | Gateway | DHCP Range |
 |---------|-----------|----------|---------|----------|---------|------------|
-| 192.168.1.0/24 | MGMT_LAN | em1 (native) | Management | Secure_Net | 192.168.1.1 | None (static) |
+| 192.168.1.0/24 | MGMT_LAN | em1 (native) | Management | Secure_Net | None (local-link only) | 1.100-1.110 (no GW) |
 | 192.168.10.0/24 | SERVERS | em1 (VLAN 10) | Server Infrastructure | Secure_Net | 192.168.10.1 | 10.100-10.250 |
 | 192.168.11.0/24 | WIFI_SECURE | em1 (VLAN 11) | Wireless Secured | Secure_Net | 192.168.11.1 | 11.100-11.250 |
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20) | Guest Access | Unsecure_Net | 192.168.20.1 | 20.100-20.250 |
@@ -244,8 +244,10 @@ Click **Save** → **Apply**
 - **Interface**: Boys | **Start**: 192.168.30.100 | **End**: 192.168.30.250 | **Lease**: 86400
 
 #### MGMT_LAN (VLAN 1)
-- **Interface**: MGMT_LAN | **Start**: 192.168.1.100 | **End**: 192.168.1.110 | **Lease**: 3600
-- Static IPs in use: 192.168.1.1 (router), 192.168.1.2 (switch) — pool is for temporary connections only
+- **Interface**: MGMT_LAN | **Start**: 192.168.1.100 | **End**: 192.168.1.110 | **Lease**: 3600 | **Gateway**: *(leave blank)*
+- No default gateway is issued — laptops plugged into this port use WiFi (or another interface) for all routed traffic
+- Direct L2 access to 192.168.1.1 (router) and 192.168.1.2 (switch) without any routing
+- Static IPs in use: 192.168.1.1 (router), 192.168.1.2 (switch)
 
 > **DMZ (VLAN 250)**: No DHCP configured in OPNsense — devices on VLAN 250 receive IPs directly from the DSL modem (192.168.254.x).
 
