@@ -243,7 +243,9 @@ Click **Save** → **Apply**
 #### Boys (VLAN 30)
 - **Interface**: Boys | **Start**: 192.168.30.100 | **End**: 192.168.30.250 | **Lease**: 86400
 
-> **MGMT (VLAN 1)**: Do NOT enable DHCP — all management devices use static IPs.
+#### MGMT_LAN (VLAN 1)
+- **Interface**: MGMT_LAN | **Start**: 192.168.1.100 | **End**: 192.168.1.110 | **Lease**: 3600
+- Static IPs in use: 192.168.1.1 (router), 192.168.1.2 (switch) — pool is for temporary connections only
 
 > **DMZ (VLAN 250)**: No DHCP configured in OPNsense — devices on VLAN 250 receive IPs directly from the DSL modem (192.168.254.x).
 

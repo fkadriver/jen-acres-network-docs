@@ -479,13 +479,25 @@ With floating rules handling security policies, per-interface rules become **ver
 
 **Navigate:** Firewall → Rules → MGMT (or LAN)
 
-**Rule 1: Allow MGMT to All**
+MGMT is restricted to the router and switch only — no access to other VLANs, internet, or ISP network.
+
+**Rule 1: Allow MGMT to This Firewall**
 - **Action**: Pass
 - **Interface**: MGMT
 - **Protocol**: any
 - **Source**: MGMT net
-- **Destination**: any
-- **Description**: `Allow management network full access`
+- **Destination**: This Firewall
+- **Description**: `Allow MGMT to router (web UI, SSH, DNS)`
+
+**Rule 2: Allow MGMT to Switch**
+- **Action**: Pass
+- **Interface**: MGMT
+- **Protocol**: any
+- **Source**: MGMT net
+- **Destination**: Single host → `192.168.1.2`
+- **Description**: `Allow MGMT to Aruba switch`
+
+> Default deny blocks all other traffic from MGMT. No internet, no cross-VLAN access.
 
 **Click:** Save → Apply Changes
 
@@ -676,13 +688,13 @@ These should be auto-generated. If missing, click **Save** to regenerate.
 
 | Source Network | Can Access Internet | Can Access Pi-hole | Can Access SERVERS | Can Access WIFI_SECURE | Can Access MGMT | Can Access WAN_Net | Can Access GUEST |
 |----------------|--------------------|--------------------|-------------------|----------------------|----------------|-------------------|----------------|
-| **MGMT** | ✅ (via Tailscale) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **MGMT** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | **SERVERS** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **WIFI_SECURE** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **GUEST** | ✅ | ✅ (DNS only) | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 **Key Points:**
-- ✅ **MGMT**: Full access to everything (management network + ISP modem)
+- ✅ **MGMT**: Router and switch only — no internet, no cross-VLAN access, no ISP modem
 - ✅ **Secure_Net** (SERVERS, WIFI_SECURE): Can access each other, internet, but not MGMT or WAN_Net
 - ❌ **Unsecure_Net** (GUEST): Internet + DNS only, fully isolated from Secure_Net, MGMT, WAN_Net
 
