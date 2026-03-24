@@ -187,7 +187,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
 - **TCP/IP Version**: IPv4
 
 **Source:**
-- **Source**: Managment_Access
+- **Source**: Management_Access
 
 **Destination:**
 - **Destination**: This Firewall
@@ -212,6 +212,8 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ SERVERS
   - ✓ WIFI_SECURE
   - ✓ GUEST
+  - ✓ HomeAssist
+  - ✓ Boys
 - **Destination**: This Firewall
 - **Destination port range**: HTTPS
 
@@ -267,6 +269,8 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ SERVERS
   - ✓ WIFI_SECURE
   - ✓ GUEST
+  - ✓ HomeAssist
+  - ✓ Boys
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
@@ -297,6 +301,8 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ SERVERS
   - ✓ WIFI_SECURE
   - ✓ GUEST
+  - ✓ HomeAssist
+  - ✓ Boys
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
@@ -325,6 +331,8 @@ These auto-generated aliases will be used in the floating rules below. The namin
 - **Quick**: ✓
 - **Interface**: Select isolated networks:
   - ✓ GUEST
+  - ✓ HomeAssist
+  - ✓ Boys
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
@@ -355,6 +363,8 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ SERVERS
   - ✓ WIFI_SECURE
   - ✓ GUEST
+  - ✓ HomeAssist
+  - ✓ Boys
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
@@ -385,6 +395,8 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ SERVERS
   - ✓ WIFI_SECURE
   - ✓ GUEST
+  - ✓ HomeAssist
+  - ✓ Boys
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
