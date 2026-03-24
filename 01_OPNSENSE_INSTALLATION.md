@@ -205,7 +205,8 @@ Click **+ Add** → **Save**
 | Enable | ✓ |
 | Description | `MGMT_Only` |
 | IPv4 Configuration Type | Static IPv4 |
-| IPv4 address | `192.168.99.1 / 29` |
+| IPv4 address | `192.168.99.1` |
+| Subnet mask | `29` (255.255.255.248) |
 | Block private networks | ☐ off |
 | Block bogon networks | ☐ off |
 
@@ -237,12 +238,11 @@ Click **Save** → **Apply**
 
 **Navigation**: Firewall → Rules → MGMT_Only
 
-Add two Pass rules and nothing else (default deny handles the rest):
+Add one Pass rule (default deny handles the rest):
 
 | Action | Protocol | Source | Destination | Port | Description |
 |--------|----------|--------|-------------|------|-------------|
-| Pass | TCP | MGMT_Only net | This Firewall | 443 | Break-glass HTTPS |
-| Pass | TCP | MGMT_Only net | This Firewall | 22 | Break-glass SSH |
+| Pass | any | MGMT_Only net | This Firewall | any | Break-glass — allow all to firewall |
 
 Click **Save** → **Apply Changes**
 
