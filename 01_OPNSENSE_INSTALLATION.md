@@ -310,14 +310,3 @@ With em3 break-glass in place, work through the docs in order:
 
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#opnsense) for common OPNsense issues.
 
----
-
-## Backup Current OpenWRT Configuration
-
-Before switching to OPNsense, backup your OpenWRT config:
-```bash
-./scripts/backup.sh
-# This creates: backup/openwrt-backup-TIMESTAMP.tar.gz
-```
-
-Store this backup safely in case you need to revert.
