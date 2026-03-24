@@ -493,27 +493,31 @@ With floating rules handling security policies, per-interface rules become **ver
 
 ---
 
-### GUEST (OPT3) Interface Rules
+### GUEST (OPT3), HomeAssist (OPT4), Boys (OPT5) Interface Rules
 
-**Navigate:** Firewall → Rules → GUEST
+All three Unsecure_Net interfaces use the same single rule — floating rules handle all isolation.
 
-**Rule 1: Allow Guest to Any**
+**Navigate:** Firewall → Rules → [interface]
+
+**Rule 1: Allow to Any**
 - **Action**: Pass
-- **Interface**: GUEST
+- **Interface**: GUEST *(repeat for HomeAssist, Boys)*
 - **Protocol**: any
-- **Source**: GUEST net
+- **Source**: *[interface]* net
 - **Destination**: any
-- **Description**: `Allow guest internet access (isolation enforced by floating rules)`
+- **Description**: `Allow internet access (isolation enforced by floating rules)`
 
 **Click:** Save → Apply Changes
 
 **Note:** Floating rules automatically:
 - Block web UI access (Rule 2)
-- Allow DNS to Pi-hole (Rule 3)
-- Block access to Secure_Net (Rule 4)
-- Block access to MGMT (Rule 5)
+- Block SSH access (Rule 4)
+- Allow DNS to Pi-hole (Rule 5)
+- Block access to Secure_Net (Rule 6)
+- Block access to MGMT (Rule 7)
+- Block access to ISP modem (Rule 8)
 
-So guests get **internet only** + **DNS to Pi-hole**.
+So these networks get **internet only** + **DNS to Pi-hole**.
 
 ---
 
@@ -528,6 +532,8 @@ So guests get **internet only** + **DNS to Pi-hole**.
 - SERVERS → WAN
 - WIFI_SECURE → WAN
 - GUEST → WAN
+- HomeAssist → WAN
+- Boys → WAN
 
 These should be auto-generated. If missing, click **Save** to regenerate.
 
