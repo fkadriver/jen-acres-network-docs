@@ -31,7 +31,7 @@
 | 23 | DSL Modem | Access | VLAN 250 (DMZ — direct modem, bypasses router) |
 | 24 | Management Laptop | Access | VLAN 1 |
 | 25 | NetGear GS310TP (SFP uplink) | Access | VLAN 11 |
-| 26 | NetGear GS310TP (SFP uplink) | Access | VLAN 30 (Cailin) |
+| 26 | NetGear GS310TP (SFP uplink) | Access | VLAN 30 (Boys) |
 
 ---
 
@@ -117,7 +117,7 @@ Note that the Aruba 2530 web UI calls this "VLAN Management". Navigation paths u
 | 11 | WiFi_Secure |
 | 20 | Guest |
 | 21 | HomeAuto |
-| 30 | Cailin |
+| 30 | Boys |
 | 250 | DMZ |
 
 ### Step 2: Configure Port 1 — Router Trunk (all VLANs)
@@ -167,7 +167,7 @@ For each AP port, VLAN 10 native + tagged 11, 20, 21:
 
 > Port 23 connects directly to the DSL modem. Devices on VLAN 250 receive IPs from the modem's DHCP (192.168.254.x) and bypass the Protectli router entirely.
 
-### Step 6: Configure VLAN 30 (Cailin) on Port 1
+### Step 6: Configure VLAN 30 (Boys) on Port 1
 
 VLAN 30 is routed through the Protectli (em1 trunk). Add it to Port 1:
 
@@ -186,14 +186,14 @@ Port 24 stays on default VLAN 1 Untagged — no change needed (default).
 | 1 | No |
 | 11 | Untagged |
 
-### Step 9: Configure Port 26 (SFP) — NetGear Dumb Switch (VLAN 30 Cailin)
+### Step 9: Configure Port 26 (SFP) — NetGear Dumb Switch (VLAN 30 Boys)
 
 | VLAN | Port 26 |
 |------|---------|
 | 1 | No |
 | 30 | Untagged |
 
-> Port 26 connects to the NetGear GS310TP via SFP. Devices plugged into the NetGear on this uplink land on VLAN 30 (192.168.30.0/24, Cailin). No VLAN config needed on the NetGear itself.
+> Port 26 connects to the NetGear GS310TP via SFP. Devices plugged into the NetGear on this uplink land on VLAN 30 (192.168.30.0/24, Boys). No VLAN config needed on the NetGear itself.
 
 ---
 
@@ -212,7 +212,7 @@ vlan 20
 vlan 21
   name "HomeAuto"
 vlan 30
-  name "Cailin"
+  name "Boys"
 vlan 250
   name "DMZ"
 
@@ -243,7 +243,7 @@ vlan 250 untagged 23
 no vlan 1 untagged 25
 vlan 11 untagged 25
 
-# Port 26 (SFP) — NetGear dumb switch (VLAN 30, Cailin)
+# Port 26 (SFP) — NetGear dumb switch (VLAN 30, Boys)
 no vlan 1 untagged 26
 vlan 30 untagged 26
 
@@ -290,7 +290,7 @@ Expected VLAN summary:
 | 11 | WiFi_Secure | 25 | 1, 13, 14 |
 | 20 | Guest | — | 1, 13, 14 |
 | 21 | HomeAuto | — | 1, 13, 14 |
-| 30 | Cailin | 26 | 1 |
+| 30 | Boys | 26 | 1 |
 | 250 | DMZ | 23 | — |
 
 ---
@@ -322,7 +322,7 @@ The NetGear is connected via two SFP uplinks from the Aruba. It acts as a plain 
 | Aruba Port | NetGear SFP | VLAN | Network |
 |------------|-------------|------|---------|
 | 25 (SFP-1) | SFP-1 | 11 | WiFi_Secure (192.168.11.0/24) |
-| 26 (SFP-2) | SFP-2 | 30 | Cailin (192.168.30.0/24) |
+| 26 (SFP-2) | SFP-2 | 30 | Boys (192.168.30.0/24) |
 
 Devices plugged into NetGear copper ports connected to the SFP-1 uplink land on VLAN 11; devices on the SFP-2 uplink land on VLAN 30. The NetGear does not need any configuration.
 

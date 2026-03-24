@@ -17,12 +17,12 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.1*
 | 192.168.11.0/24 | WIFI_SECURE | em1 (VLAN 11 trunk) | Wireless Secured | Secure_Net | Enabled | Router: .1 |
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20 trunk) | Guest Access | Unsecure_Net | Enabled | Router: .1 |
 | 192.168.21.0/24 | HomeAssist | em1 (VLAN 21 trunk) | Home Automation/IoT | Unsecure_Net | Enabled | Router: .1 |
-| 192.168.30.0/24 | Cailin | em1 (VLAN 30 trunk) | Personal (Cailin) | Unsecure_Net | Enabled | Router: .1 |
+| 192.168.30.0/24 | Boys | em1 (VLAN 30 trunk) | Personal (Boys) | Unsecure_Net | Enabled | Router: .1 |
 | 192.168.254.0/24 | DMZ | Switch port 23 | DMZ — direct modem, bypasses router | — | Modem (.254) | From modem |
 
 **Supernet Aliases (for simplified firewall rules):**
 - **Secure_Net**: 192.168.0.0/20 (MGMT, SERVERS, WIFI_SECURE)
-- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist, Cailin)
+- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist, Boys)
 
 **WAN**: 192.168.254.0/24 (DHCP from 192.168.254.254)
 
