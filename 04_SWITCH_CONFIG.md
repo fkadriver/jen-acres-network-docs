@@ -11,6 +11,7 @@
 | Management | Web UI + CLI (SSH/Telnet/Console) |
 | Management IP | 192.168.1.2 (VLAN 1) |
 | Default IP | 192.168.0.1 (check label) |
+| Firmware | YA.16.11.0029 (Feb 2026) |
 | Factory Reset | Hold Clear button 10+ seconds |
 
 ---
