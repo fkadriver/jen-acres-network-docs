@@ -238,7 +238,7 @@ vlan 21 tagged 13-14
 no vlan 1 untagged 23
 vlan 254 untagged 23
 
-# Port 25 (SFP) — NetGear GS310TP trunk (native VLAN 30, tagged 250)
+# Port 25 (SFP) — NetGear GS310TP trunk (native VLAN 30, tagged 254)
 no vlan 1 untagged 25
 vlan 30 untagged 25
 vlan 254 tagged 25
