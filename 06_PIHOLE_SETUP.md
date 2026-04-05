@@ -15,8 +15,8 @@ configuration, and verification.
 
 | Role | Device | OS | IP | Switch Port | Tailscale Name |
 |------|--------|----|----|-------------|----------------|
-| **Primary** | Raspberry Pi 4 | NixOS | 192.168.10.10 | SW01 Port 2 → VLAN 10 | `pihole-primary` |
-| **Backup** | Raspberry Pi 3 | NixOS | 192.168.10.11 | SW01 Port 3 → VLAN 10 | `pihole-backup` |
+| **Primary** | Raspberry Pi 4 | NixOS | 192.168.10.10 | SW01 Port 2 → VLAN 10 | `pihole01` |
+| **Backup** | Raspberry Pi 3 | NixOS | 192.168.10.11 | SW01 Port 3 → VLAN 10 | `pihole02` |
 
 Both units land on VLAN 10 (SERVERS, 192.168.10.0/24). Gateway: 192.168.10.1
 
@@ -34,8 +34,8 @@ Pi-hole Primary     Pi-hole Backup
 192.168.10.10       192.168.10.11
   │                     │
   └────────┬────────────┘
-           │ Upstream DNS
-       1.1.1.1 / 8.8.8.8
+           │ Upstream DNS (DNSSEC)
+       9.9.9.9 / 149.112.112.112 (Quad9)
 ```
 
 Pi-hole sees **actual client IPs** (not the router IP) because Dnsmasq DHCP hands out the Pi-hole
@@ -45,16 +45,20 @@ addresses directly — clients query Pi-hole directly, bypassing OPNsense.
 
 ## What NixOS Manages
 
-The following are declared in `nixos/` and applied with `nixos-rebuild switch`:
+The following are declared in `nixos/` (see `fkadriver/nixos` repo, `modules/pihole.nix`)
+and deployed with `./scripts/deploy-piholes.sh` from latitude or vm01:
 
-- Pi-hole installation and service management
+- Pi-hole FTL (v6) installation and service management (`pihole-ftl.service`)
 - Static IP addresses (192.168.10.10 / .11)
 - DNS listening mode (`ALL` — required for cross-VLAN access)
-- Upstream DNS servers (1.1.1.1, 8.8.8.8)
-- Conditional forwarding: `192.168.0.0/16 → 192.168.10.1`
-- Tailscale installation and configuration (`--accept-routes --ssh`)
-- Gravity Sync (blocklist sync between primary and backup)
-- Blocklist sources
+- Upstream DNS: **Quad9** (`9.9.9.9`, `149.112.112.112`) with DNSSEC enabled
+- Blocking mode: `IP` (returns Pi-hole's own IP for blocked queries)
+- Conditional forwarding: per-VLAN reverse servers for 192.168.1.0/24, 192.168.10–11/24, 192.168.20–21/24, 192.168.30/24
+- iCloud Private Relay blocked (`specialDomains.iCloudPrivateRelay = false`)
+- Tailscale + `tailscale serve` (exposes web UI at `https://pihole0x.<tailnet>.ts.net`)
+- Web UI password from Bitwarden via sops-nix (`pihole-set-password.service`)
+- Blocklists: Hagezi Multi (block) + Hagezi Referral Native (allow)
+- rsyslog forwarding to `log01.warthog-royal.ts.net`
 
 > Do not configure these settings via the Pi-hole web UI — NixOS will overwrite them on
 > the next rebuild.
@@ -113,8 +117,12 @@ Tell DHCP clients to use both Pi-holes for DNS.
 | Interface | Any |
 | Type | Set |
 | Option | `dns-server [6]` |
-| Value | `192.168.10.10,192.168.10.11` |
-| Description | Pi-hole DNS servers (primary + backup) |
+| Value | `192.168.10.10,192.168.10.11,8.8.8.8` |
+| Description | Pi-hole DNS servers (primary, backup, Google fallback) |
+
+> **8.8.8.8 as fallback**: Clients try DNS servers in order. `8.8.8.8` is only reached if
+> both Pi-holes fail to respond. It bypasses ad-blocking but keeps connectivity during
+> Pi-hole outages. Omit if you prefer hard failure over unfiltered DNS.
 
 Click **Save** → **Apply**
 
@@ -144,7 +152,7 @@ visibility in DHCP logs.
 |-------|---------|--------|
 | MAC | (from `ip link show eth0` on Pi) | — |
 | IP | `192.168.10.10` | `192.168.10.11` |
-| Hostname | `pihole-primary` | `pihole-backup` |
+| Hostname | `pihole01` | `pihole02` |
 
 Click **Save** → **Apply**
 
@@ -171,7 +179,7 @@ After Pi-holes join the tailnet (handled by NixOS):
 
 1. Go to `https://login.tailscale.com/admin/machines`
 2. For each Pi-hole:
-   - Verify machine name matches `pihole-primary` / `pihole-backup`
+   - Verify machine name matches `pihole01` / `pihole02`
    - **Edit tags** → add `tag:server`
    - **Disable key expiry**
 
@@ -191,14 +199,17 @@ This routes all Tailscale device DNS queries through Pi-hole even when remote.
 > Most settings are managed by NixOS. These are the items that need verification or
 > occasional manual adjustment via the web UI.
 
-Access via Tailscale:
+Access via Tailscale (HTTPS — provided by `tailscale-serve-pihole.service`):
 
 | Pi-hole | URL |
 |---------|-----|
-| Primary | `http://pihole-primary.warthog-royal.ts.net/admin` |
-| Backup | `http://pihole-backup.warthog-royal.ts.net/admin` |
+| Primary | `https://pihole01.warthog-royal.ts.net` |
+| Backup | `https://pihole02.warthog-royal.ts.net` |
 
-Or from SERVERS VLAN: `http://192.168.10.10/admin`
+Or from SERVERS VLAN: `http://192.168.10.10`
+
+> The web UI password is fetched from Bitwarden at boot by `pihole-set-password.service`.
+> Do not set the password via the web UI — it will be overwritten on the next reboot.
 
 ### Verify DNS Listening Mode
 
@@ -210,24 +221,33 @@ Or from SERVERS VLAN: `http://192.168.10.10/admin`
 
 **Navigation**: Settings → DNS → Advanced DNS settings → Reverse server
 
-Should show an entry for `192.168.0.0/16` pointing to `192.168.10.1`.
+Should show per-VLAN entries (set by NixOS via `dns.revServers`):
 
-This allows Pi-hole to resolve PTR queries (reverse DNS) through OPNsense, which gives
-client hostnames in query logs instead of bare IPs.
+| CIDR | Gateway |
+|------|---------|
+| `192.168.1.0/24` | `192.168.1.1` |
+| `192.168.10.0/24` | `192.168.10.1` |
+| `192.168.11.0/24` | `192.168.11.1` |
+| `192.168.20.0/24` | `192.168.20.1` |
+| `192.168.21.0/24` | `192.168.21.1` |
+| `192.168.30.0/24` | `192.168.30.1` |
+
+This allows Pi-hole to resolve PTR queries (reverse DNS) through each VLAN gateway,
+giving client hostnames in query logs instead of bare IPs.
 
 ### Add/Update Blocklists
 
 **Navigation**: Group Management → Adlists
 
-Recommended lists (if not already in NixOS config):
+NixOS manages these lists (do not add/remove here — NixOS owns them):
 
-| Name | URL |
-|------|-----|
-| Hagezi Pro | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/pro.txt` |
-| OISD Full | `https://big.oisd.nl/` |
-| StevenBlack | `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts` |
+| Type | Name | URL |
+|------|------|-----|
+| Block | Hagezi Multi | `https://gitlab.com/hagezi/mirror/-/raw/main/dns-blocklists/adblock/multi.txt` |
+| Allow | Hagezi Referral Native | `https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/whitelist-referral-native.txt` |
 
-After adding: **Navigation**: Tools → Update Gravity → **Update**
+To add extra lists without NixOS managing them, use the web UI — they persist in `gravity.db`
+but won't appear in `pihole.nix`. After adding: **Navigation**: Tools → Update Gravity → **Update**
 
 ### Pi-hole Groups for VLAN-Specific Filtering
 
@@ -283,21 +303,14 @@ If you see only the router IP, Dnsmasq DNS listen port is not `0` — check Step
 ### Test DNS Failover
 
 ```bash
-# Disable primary temporarily
-ssh pihole-primary sudo pihole disable
+# Stop primary temporarily
+ssh scott@pihole01 sudo systemctl stop pihole-ftl
 
 # From a client — should still resolve via backup (192.168.10.11)
 nslookup google.com
 
 # Re-enable primary
-ssh pihole-primary sudo pihole enable
-```
-
-### Verify Gravity Sync (Backup)
-
-```bash
-ssh pihole-backup gravity-sync status
-gravity-sync logs
+ssh scott@pihole01 sudo systemctl start pihole-ftl
 ```
 
 ---
@@ -307,16 +320,16 @@ gravity-sync logs
 ```
 [ ] Unbound DNS disabled on OPNsense
 [ ] Dnsmasq listen port = 0 (DHCP only)
-[ ] DHCP option 6 = 192.168.10.10, 192.168.10.11
+[ ] DHCP option 6 = 192.168.10.10, 192.168.10.11, 8.8.8.8
 [ ] Pi_hole_DNS alias created
 [ ] Host Discovery enabled (26.1)
-[ ] Pi-hole primary resolves DNS (drill google.com @192.168.10.10)
-[ ] Pi-hole backup resolves DNS (drill google.com @192.168.10.11)
+[ ] Pi-hole primary resolves DNS (dig @192.168.10.10 google.com +short)
+[ ] Pi-hole backup resolves DNS (dig @192.168.10.11 google.com +short)
 [ ] Source IPs visible in Pi-hole query log (device IPs, not router IP)
-[ ] Tailscale admin: pihole-primary tagged tag:server, key expiry disabled
-[ ] Tailscale admin: pihole-backup tagged tag:server, key expiry disabled
+[ ] Tailscale admin: pihole01 tagged tag:server, key expiry disabled
+[ ] Tailscale admin: pihole02 tagged tag:server, key expiry disabled
 [ ] Tailscale DNS configured: global nameserver 192.168.10.10
-[ ] Gravity Sync running (blocklists synced primary → backup)
+[ ] Web UI accessible at https://pihole01.warthog-royal.ts.net
 ```
 
 ---
@@ -344,15 +357,47 @@ gravity-sync logs
 
 **Cannot reach Pi-hole web UI**
 ```bash
-# Check lighttpd service
-ssh pihole-primary sudo systemctl status lighttpd
-sudo systemctl start lighttpd
+# Check FTL service (v6 — web UI is built into pihole-ftl, no separate lighttpd)
+ssh scott@pihole01 systemctl status pihole-ftl
+ssh scott@pihole01 sudo systemctl restart pihole-ftl
+
+# Web UI also available via Tailscale HTTPS
+# https://pihole01.warthog-royal.ts.net
+```
+
+**Password prompt missing or not accepted**
+```bash
+# Check pihole-set-password service
+ssh scott@pihole01 sudo systemctl status pihole-set-password bitwarden-secrets-sync
+# If bitwarden-secrets-sync failed, the age key may not be in .sops.yaml (see nixos repo docs)
+# Restart the chain:
+ssh scott@pihole01 sudo systemctl restart pihole-set-password pihole-ftl
 ```
 
 **Conditional forwarding not resolving hostnames**
-1. Verify entry in Settings → DNS → Advanced → Reverse server: `192.168.0.0/16 → 192.168.10.1`
+1. Verify per-VLAN reverse server entries in Settings → DNS → Advanced → Reverse server
 2. OPNsense DHCP must have static leases with hostnames set (Services → Dnsmasq → Hosts)
 3. 26.1: Enable Host Discovery for better hostname population
+
+---
+
+## Deploying Updates
+
+From latitude or vm01 (builds locally, deploys over SSH):
+
+```bash
+# Both piholes sequentially (preferred)
+cd ~/git/nixos
+./scripts/deploy-piholes.sh
+
+# Single pihole manual deploy
+sudo nixos-rebuild switch --flake .#pihole01 \
+  --target-host scott@pihole01 \
+  --build-host localhost \
+  --sudo
+```
+
+See `fkadriver/nixos` → `docs/pihole-deployment.md` for full bootstrap and first-time setup.
 
 ---
 
@@ -360,4 +405,4 @@ sudo systemctl start lighttpd
 
 - [03_VLAN_CONFIG.md](03_VLAN_CONFIG.md) — DHCP ranges per VLAN
 - [05_FIREWALL_RULES.md](05_FIREWALL_RULES.md) — DNS firewall rules (Pi_hole_DNS alias)
-- `nixos/` — NixOS configurations for pihole-primary and pihole-backup
+- `fkadriver/nixos` repo → `modules/pihole.nix` — NixOS configuration for pihole01 and pihole02

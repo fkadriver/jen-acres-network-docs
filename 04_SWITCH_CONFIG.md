@@ -316,6 +316,30 @@ Or CLI: `write memory`
 
 ---
 
+## Syslog (Remote Logging to syslog-server)
+
+Forward switch logs to `syslog-server` (192.168.10.22, VLAN 10) for centralized monitoring.
+The switch reaches it via OPNsense inter-VLAN routing (default gateway 192.168.1.1).
+
+### HPE Aruba 2530 (ProCurve CLI)
+
+```
+logging 192.168.10.22
+logging severity informational
+write memory
+```
+
+Verify:
+```
+show logging -r           # recent log entries
+show logging config       # active syslog destinations
+```
+
+> **Note:** The Aruba 2530 sends syslog over UDP port 514 using the standard BSD format.
+> Severity `informational` captures info, notice, warning, error, critical, and emergency.
+
+---
+
 ## NetGear GS310TP as Dumb Switch (Ports 25 and 26 SFP)
 
 The NetGear is connected via two SFP uplinks from the Aruba. It acts as a plain switch — no VLAN config needed on the NetGear itself. The Aruba enforces VLAN membership per SFP port:

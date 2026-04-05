@@ -453,28 +453,27 @@ Check the firewall logs for blocked attempts:
 
 ### Configure Centralized Logging
 
-Forward OPNsense logs to the centralized syslog server via Tailscale for security monitoring and analysis.
+Forward OPNsense logs to `sands-log01` (syslog server) via Tailscale for centralized monitoring.
 
 **Navigation**: System → Settings → Logging / targets
 
-**Add new target:**
+**Add new target (or verify existing):**
 
 | Setting | Value |
 |---------|-------|
-| **Transport** | TCP(4) |
-| **Applications** | (leave empty for all) |
-| **Levels** | Warning and above |
-| **Hostname** | `syslog-server` |
+| **Transport** | UDP(4) |
+| **Applications** | `audit,configd.py,dhcpd,dhcrelay,dnsmasq,filterlog,firewall,dpinger,hostwatch,charon,kea-dhcp4,kernel,ntp,ntpd,openvpn,pkg,suricata,wireguard` |
+| **Levels** | `info,notice,warn,err,crit,alert,emerg` |
+| **Hostname** | `sands-log01.warthog-royal.ts.net` |
 | **Port** | `514` |
-| **Description** | Centralized Syslog Server |
+| **RFC 5424** | ✓ enabled |
+| **Description** | `Log everything except DEBUG to sands-log01` |
 
 **Click:** Save → Apply
 
-**Note:** The `syslog-server` hostname is a DNS alias configured in Pi-hole, pointing to the actual syslog server on the Tailscale network. This provides a single point of configuration for all devices.
-
-For complete centralized logging setup across all devices, see:
-- [04_PIHOLE_SETUP.md - Local DNS Records](04_PIHOLE_SETUP.md#5-configure-local-dns-records) - Configure the `syslog-server` DNS alias
-- [08_TAILSCALE_SETUP.md - Part 13](08_TAILSCALE_SETUP.md#part-13-centralized-logging-via-tailscale) - Full logging guide
+> OPNsense uses the Tailscale FQDN directly (not the Pi-hole local alias) so logging
+> works even if Pi-hole is down. The `syslog-server` local hostname (192.168.10.22) and
+> the Tailscale name `sands-log01.warthog-royal.ts.net` resolve to the same host.
 
 ### Disable Unused Services
 
