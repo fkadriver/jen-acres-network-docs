@@ -55,7 +55,7 @@
     │ Port 5:  Pi-hole Backup  (VLAN 10)              │
     │ Port 13: U6Basement PoE+ (VLAN 10+11+20+21)    │
     │ Port 14: U6MainLevel PoE+(VLAN 10+11+20+21)    │
-    │ Port 23: DSL Modem     (VLAN 250 DMZ)           │
+    │ Port 23: DSL Modem     (VLAN 254 DMZ)           │
     │ Port 24: Mgmt Laptop   (VLAN 1)                 │
     │ Port 25: NetGear (SFP) (VLAN 11)               │
     └─────────────────────────────────────────────────┘
@@ -108,7 +108,7 @@ Create VLANs for all tagged networks. **Use `em1` as the parent interface**.
 - **Description**: Boys
 - Click **Save**
 
-> **VLAN 250 (DMZ)**: No OPNsense interface needed — VLAN 250 is handled entirely at the switch level (port 23). Devices get IPs directly from the modem (192.168.254.x) and bypass the router.
+> **VLAN 254 (DMZ)**: No OPNsense interface needed — VLAN 254 is handled entirely at the switch level (port 23). Devices get IPs directly from the modem (192.168.254.x) and bypass the router.
 
 **Verify**: You should see 5 VLANs listed: `em1_vlan10`, `em1_vlan11`, `em1_vlan20`, `em1_vlan21`, `em1_vlan30`
 
@@ -245,7 +245,7 @@ Click **Save** → **Apply**
 
 > **MGMT (VLAN 1)**: No DHCP — all management devices use static IPs.
 
-> **DMZ (VLAN 250)**: No DHCP configured in OPNsense — devices on VLAN 250 receive IPs directly from the DSL modem (192.168.254.x).
+> **DMZ (VLAN 254)**: No DHCP configured in OPNsense — devices on VLAN 254 receive IPs directly from the DSL modem (192.168.254.x).
 
 #### MGMT_Only (em3 — Break-Glass)
 - **Interface**: MGMT_Only | **Start**: 192.168.99.2 | **End**: 192.168.99.6 | **Lease**: 3600
