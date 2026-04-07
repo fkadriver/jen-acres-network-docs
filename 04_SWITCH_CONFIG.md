@@ -302,27 +302,11 @@ Or CLI: `write memory`
 
 ---
 
-## Syslog (Remote Logging to syslog-server)
+## Remote Logging
 
-Forward switch logs to `syslog-server` (192.168.10.22, VLAN 10) for centralized monitoring.
-The switch reaches it via OPNsense inter-VLAN routing (default gateway 192.168.1.1).
+The HPE Aruba 2530 running ProVision YA firmware **does not support native syslog forwarding**. The only remote event notification mechanism is SNMP traps.
 
-### HPE Aruba 2530 (ProCurve CLI)
-
-```
-logging 192.168.10.22
-logging severity informational
-write memory
-```
-
-Verify:
-```
-show logging -r           # recent log entries
-show logging config       # active syslog destinations
-```
-
-> **Note:** The Aruba 2530 sends syslog over UDP port 514 using the standard BSD format.
-> Severity `informational` captures info, notice, warning, error, critical, and emergency.
+To capture switch logs centrally, SNMP traps would need to be enabled on the switch and a trap receiver (e.g. `snmptrapd`) would need to be configured on `log01` (192.168.10.22) to ingest them. This has not been implemented.
 
 ---
 

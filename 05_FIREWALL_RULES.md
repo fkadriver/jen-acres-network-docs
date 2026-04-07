@@ -11,7 +11,7 @@ Your supernet architecture enables simplified firewall management:
 - **Unsecure_Net** (192.168.16.0/20): GUEST, HomeAssist, Boys
 
 **Benefits:**
-- ✅ **8 floating rules** instead of 20+ interface rules
+- ✅ **9 floating rules** instead of 20+ interface rules
 - ✅ **Centralized policy management**
 - ✅ **Consistent security across all networks**
 - ✅ **Easier to audit and maintain**
@@ -214,6 +214,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ GUEST
   - ✓ HomeAssist
   - ✓ Boys
+  - ✓ DMZ
 - **Destination**: This Firewall
 - **Destination port range**: HTTPS
 
@@ -271,6 +272,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ GUEST
   - ✓ HomeAssist
   - ✓ Boys
+  - ✓ DMZ
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
@@ -303,6 +305,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ GUEST
   - ✓ HomeAssist
   - ✓ Boys
+  - ✗ DMZ *(excluded — DMZ uses Cloudflare 1.1.1.2/1.0.0.2 via DHCP, not Pi-hole)*
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
@@ -322,7 +325,36 @@ These auto-generated aliases will be used in the floating rules below. The namin
 
 ---
 
-### Floating Rule 6: Block Unsecure → Secure Networks
+### Floating Rule 6: Block DMZ → All Internal Networks
+
+**Click:** + Add
+
+**General Settings:**
+- **Action**: Block
+- **Quick**: ✓
+- **Interface**:
+  - ✓ DMZ
+- **Direction**: in
+- **TCP/IP Version**: IPv4
+
+**Source:**
+- **Source**: any
+
+**Destination:**
+- **Destination**: Select `Internal_Network` (192.168.0.0/19)
+
+**Extra Options:**
+- **Protocol**: any
+- **Description**: `Block DMZ from all internal networks`
+- **Log**: ✓
+
+**Click:** Save
+
+> DMZ (192.168.250.0/24) sits outside both supernets and is not caught by the Unsecure→Secure rule below. This dedicated rule ensures DMZ devices cannot reach anything in 192.168.0.0/19 (Secure_Net + Unsecure_Net + MGMT).
+
+---
+
+### Floating Rule 7: Block Unsecure → Secure Networks
 
 **Click:** + Add
 
@@ -352,7 +384,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
 
 ---
 
-### Floating Rule 7: Block All Client Networks from MGMT
+### Floating Rule 8: Block All Client Networks from MGMT
 
 **Click:** + Add
 
@@ -365,6 +397,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ GUEST
   - ✓ HomeAssist
   - ✓ Boys
+  - ✓ DMZ
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
@@ -384,7 +417,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
 
 ---
 
-### Floating Rule 8: Block All Client Networks from WAN Network
+### Floating Rule 9: Block All Client Networks from WAN Network
 
 **Click:** + Add
 
@@ -397,6 +430,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ GUEST
   - ✓ HomeAssist
   - ✓ Boys
+  - ✓ DMZ
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
@@ -429,23 +463,25 @@ After creating all rules, verify the order in **Firewall → Rules → Floating*
 | # | Action | Quick | Interface | Source | Destination | Description |
 |---|--------|-------|-----------|--------|-------------|-------------|
 | 1 | Pass | ✓ | MGMT_LAN, Tailscale | Management_Access | This Firewall:443 | Allow web UI from MGMT/Tailscale |
-| 2 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys | any | This Firewall:443 | Block web UI from unauthorized |
+| 2 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys, DMZ | any | This Firewall:443 | Block web UI from unauthorized |
 | 3 | Pass | ✓ | MGMT_LAN, Tailscale | Management_Access | This Firewall:22 | Allow SSH from MGMT/Tailscale |
-| 4 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys | any | This Firewall:22 | Block SSH from unauthorized |
-| 5 | Pass | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys | any | Pi_hole_DNS:53 | Allow all networks DNS to Pi-hole |
-| 6 | Block | ✓ | GUEST, HomeAssist, Boys | Unsecure_Net | Secure_Net | Block isolated → secure |
-| 7 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys | any | MGMT net | Block clients → MGMT |
-| 8 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys | any | WAN_Net | Block clients → ISP network |
+| 4 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys, DMZ | any | This Firewall:22 | Block SSH from unauthorized |
+| 5 | Pass | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys | any | Pi_hole_DNS:53 | Allow DNS to Pi-hole (not DMZ) |
+| 6 | Block | ✓ | DMZ | any | Internal_Network (192.168.0.0/19) | Block DMZ → all internal networks |
+| 7 | Block | ✓ | GUEST, HomeAssist, Boys | Unsecure_Net | Secure_Net | Block isolated → secure |
+| 8 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys, DMZ | any | MGMT net | Block clients → MGMT |
+| 9 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys, DMZ | any | WAN_Net | Block clients → ISP network |
 
 **Why This Order?**
 1. **Web UI access first**: Allow management access from authorized networks
 2. **Web UI block second**: Block unauthorized access to firewall management
 3. **SSH access third**: Allow console access from authorized networks
 4. **SSH block fourth**: Block unauthorized SSH access
-5. **DNS fifth**: Allow critical DNS service before other blocking rules
-6. **Network segmentation**: Block Unsecure → Secure
-7. **Management protection**: Block all clients from MGMT
-8. **ISP network protection**: Block all clients from accessing upstream ISP infrastructure (192.168.254.0/24 — modem management, not internet)
+5. **DNS fifth**: Allow critical DNS service before other blocking rules (DMZ excluded — uses Cloudflare)
+6. **DMZ isolation**: Block DMZ from all internal networks (192.168.250.0/24 is outside the supernets and not caught by Rule 7)
+7. **Network segmentation**: Block Unsecure → Secure
+8. **Management protection**: Block all clients from MGMT
+9. **ISP network protection**: Block all clients from accessing upstream ISP infrastructure
 
 **Reorder if needed:** Drag and drop rules to change order.
 
@@ -486,6 +522,30 @@ Both Secure_Net interfaces use the same single rule — floating rules handle MG
 - **Description**: `Allow internet and LAN access (MGMT blocked by floating rule)`
 
 **Click:** Save → Apply Changes
+
+---
+
+### DMZ (OPT8) Interface Rules
+
+**Navigate:** Firewall → Rules → DMZ
+
+**Rule 1: Allow to Any**
+- **Action**: Pass
+- **Interface**: DMZ
+- **Protocol**: any
+- **Source**: DMZ net
+- **Destination**: any
+- **Description**: `Allow DMZ internet access (all internal access blocked by floating rules)`
+
+**Click:** Save → Apply Changes
+
+**Note:** Floating rules automatically:
+- Block web UI access (Rule 2)
+- Block SSH access (Rule 4)
+- Block access to all internal networks — Secure_Net, Unsecure_Net, MGMT (Rule 6 + Rule 8)
+- Block access to ISP network (Rule 9)
+
+DMZ devices get **internet only** with Cloudflare malware-blocking DNS (1.1.1.2/1.0.0.2) delivered via DHCP.
 
 ---
 
@@ -530,6 +590,7 @@ So these networks get **internet only** + **DNS to Pi-hole**.
 - GUEST → WAN
 - HomeAssist → WAN
 - Boys → WAN
+- DMZ → WAN
 
 These should be auto-generated. If missing, click **Save** to regenerate.
 
@@ -650,11 +711,13 @@ These should be auto-generated. If missing, click **Save** to regenerate.
 | **SERVERS** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **WIFI_SECURE** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **GUEST** | ✅ | ✅ (DNS only) | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **DMZ** | ✅ (Cloudflare DNS) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 **Key Points:**
 - ✅ **MGMT**: Full access to everything (management network + ISP modem)
 - ✅ **Secure_Net** (SERVERS, WIFI_SECURE): Can access each other, internet, but not MGMT or WAN_Net
 - ❌ **Unsecure_Net** (GUEST): Internet + DNS only, fully isolated from Secure_Net, MGMT, WAN_Net
+- ❌ **DMZ**: Internet only, fully isolated from all internal networks; uses Cloudflare malware-blocking DNS (not Pi-hole)
 
 ---
 
@@ -742,8 +805,8 @@ This floating rules configuration provides:
 ✅ **Flexible Security**: Easy to add exceptions for specific services
 
 **Total Rules Required:**
-- 8 floating rules (network-wide policies)
-- 4 interface rules (1 per interface, all identical "allow to any")
-- **= 12 total rules** instead of 20+ individual rules
+- 9 floating rules (network-wide policies)
+- 5 interface rules (1 per interface, all identical "allow to any")
+- **= 14 total rules** instead of 20+ individual rules
 
 This is the power of the supernet architecture combined with floating rules!
