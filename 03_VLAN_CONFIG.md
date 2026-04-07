@@ -19,21 +19,26 @@
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20) | Guest Access | Unsecure_Net | 192.168.20.1 | 20.100-20.250 |
 | 192.168.21.0/24 | HomeAssist | em1 (VLAN 21) | HomeAssist/IoT | Unsecure_Net | 192.168.21.1 | 21.100-21.250 |
 | 192.168.30.0/24 | Boys | em1 (VLAN 30) | Personal (Boys) | Unsecure_Net | 192.168.30.1 | 30.100-30.250 |
-| 192.168.254.0/24 | DMZ | Switch port 23 | DMZ — direct modem, bypasses router | — | Modem (.254) | From modem |
+| 192.168.250.0/24 | DMZ | em1 (VLAN 250) | DMZ — router-managed, internet DNS, no internal access | — | 192.168.250.1 | 250.100-250.250 |
 | 192.168.99.0/29 | MGMT_Only | em3 (isolated) | Break-glass emergency | — | 192.168.99.1 | 99.2-99.6 |
 
 ## Physical Topology
 
 ```
+    T3200 Kinetic
+    (DSL Modem)
+         │
+         │  (direct — bridge/passthrough mode; see research/T3200_bridge_mode.md)
+         │
                     ┌───────────────────────────────────┐
                     │      Protectli FW41 Router        │
                     │          192.168.1.1              │
                     │                                   │
-    WAN ───em0──────┤  192.168.254.x (DHCP from ISP)   │
+    WAN ───em0──────┤  WAN (IP from T3200 / ISP)        │
      (Intel I211)   │                                   │
                     │   em1: VLAN Trunk                 │
     Aruba──em1──────┤   Native: VLAN 1 (MGMT)          │
-     (Intel I211)   │   Tagged: 10, 11, 20, 21, 30      │
+     (Intel I211)   │   Tagged: 10, 11, 20, 21, 30, 250 │
                     │                                   │
                     │   em2: Unused                     │
                     │                                   │
@@ -44,21 +49,21 @@
                          │
               ┌──────────┘
               │
-    ┌─────────▼──────────────────────────────────────┐
-    │      HPE Aruba 2530-24G PoE+  (J9773A)         │
-    │              192.168.1.2                        │
-    ├─────────────────────────────────────────────────┤
-    │ Port 1:  Trunk → em1 (VLANs 1,10,11,20,21,30)  │
-    │ Port 2:  NAS01         (VLAN 10)                │
-    │ Port 3:  Pi-hole Primary (VLAN 10)              │
-    │ Port 4:  VM01          (VLAN 10)                │
-    │ Port 5:  Pi-hole Backup  (VLAN 10)              │
-    │ Port 13: U6Basement PoE+ (VLAN 10+11+20+21)    │
-    │ Port 14: U6MainLevel PoE+(VLAN 10+11+20+21)    │
-    │ Port 23: DSL Modem     (VLAN 254 DMZ)           │
-    │ Port 24: Mgmt Laptop   (VLAN 1)                 │
-    │ Port 25: NetGear (SFP) (VLAN 11)               │
-    └─────────────────────────────────────────────────┘
+    ┌─────────▼──────────────────────────────────────────┐
+    │      HPE Aruba 2530-24G PoE+  (J9773A)             │
+    │              192.168.1.2                            │
+    ├─────────────────────────────────────────────────────┤
+    │ Port 1:  Trunk → em1 (VLANs 1,10,11,20,21,30,250)  │
+    │ Port 2:  NAS01         (VLAN 10)                    │
+    │ Port 3:  Pi-hole Primary (VLAN 10)                  │
+    │ Port 4:  VM01          (VLAN 10)                    │
+    │ Port 5:  Pi-hole Backup  (VLAN 10)                  │
+    │ Port 13: U6Basement PoE+ (VLAN 10+11+20+21)        │
+    │ Port 14: U6MainLevel PoE+(VLAN 10+11+20+21)        │
+    │ Port 23: Available     —                            │
+    │ Port 24: Mgmt Laptop   (VLAN 1)                    │
+    │ Port 25: NetGear (SFP) (VLAN 30 native)            │
+    └─────────────────────────────────────────────────────┘
 ```
 
 ## Step-by-Step Network Configuration (From Scratch)
@@ -108,9 +113,13 @@ Create VLANs for all tagged networks. **Use `em1` as the parent interface**.
 - **Description**: Boys
 - Click **Save**
 
-> **VLAN 254 (DMZ)**: No OPNsense interface needed — VLAN 254 is handled entirely at the switch level (port 23). Devices get IPs directly from the modem (192.168.254.x) and bypass the router.
+### VLAN 250 - DMZ
+- **Parent Interface**: em1
+- **VLAN tag**: 250
+- **Description**: DMZ
+- Click **Save**
 
-**Verify**: You should see 5 VLANs listed: `em1_vlan10`, `em1_vlan11`, `em1_vlan20`, `em1_vlan21`, `em1_vlan30`
+**Verify**: You should see 6 VLANs listed: `em1_vlan10`, `em1_vlan11`, `em1_vlan20`, `em1_vlan21`, `em1_vlan30`, `em1_vlan250`
 
 ---
 
@@ -136,6 +145,10 @@ You should already see WAN (em0) and LAN (em1) assigned. LAN is already assigned
 1. **Device**: Select `em1_vlan21`
 2. Click **Add**
 
+**Add DMZ (VLAN 250):**
+1. **Device**: Select `em1_vlan250`
+2. Click **Add**
+
 After adding all interfaces:
 
 | Interface | Identifier | Device |
@@ -149,6 +162,7 @@ After adding all interfaces:
 | [OPT5]    | opt5       | em1 VLAN 30 (Boys) |
 | [OPT6]    | opt6       | tailscale0 (Tailscale VPN) |
 | [OPT7]    | opt7       | em3 — Break-glass (MGMT_Only) *(configured in 01_OPNSENSE_INSTALLATION.md)* |
+| [OPT8]    | opt8       | em1 VLAN 250 (DMZ) |
 
 Click **Save**
 
@@ -201,6 +215,14 @@ Click **Save** → **Apply Changes**
 - **Description**: Boys
 - **IPv4 address**: 192.168.30.1 / 24
 
+### OPT8 (DMZ - VLAN 250)
+
+- **Enable**: ✓
+- **Description**: DMZ
+- **IPv4 address**: 192.168.250.1 / 24
+
+> **DMZ firewall**: Block all traffic from 192.168.250.0/24 to Secure_Net (192.168.0.0/20) and Unsecure_Net (192.168.16.0/20). Allow WAN-bound traffic only. See [05_FIREWALL_RULES.md](05_FIREWALL_RULES.md).
+
 ---
 
 ## Phase 4: Configure DHCP Services (Dnsmasq)
@@ -243,9 +265,10 @@ Click **Save** → **Apply**
 #### Boys (VLAN 30)
 - **Interface**: Boys | **Start**: 192.168.30.100 | **End**: 192.168.30.250 | **Lease**: 86400
 
-> **MGMT (VLAN 1)**: No DHCP — all management devices use static IPs.
+#### DMZ (VLAN 250)
+- **Interface**: DMZ | **Start**: 192.168.250.100 | **End**: 192.168.250.250 | **Lease**: 3600
 
-> **DMZ (VLAN 254)**: No DHCP configured in OPNsense — devices on VLAN 254 receive IPs directly from the DSL modem (192.168.254.x).
+> **MGMT (VLAN 1)**: No DHCP — all management devices use static IPs.
 
 #### MGMT_Only (em3 — Break-Glass)
 - **Interface**: MGMT_Only | **Start**: 192.168.99.2 | **End**: 192.168.99.6 | **Lease**: 3600
@@ -256,12 +279,23 @@ Click **Save** → **Apply**
 
 **Navigation**: Services → Dnsmasq DNS & DHCP → DHCP options
 
+Add two entries:
+
 | Setting | Value |
 |---------|-------|
 | **Interface** | Any |
 | **Option** | dns-server [6] |
 | **Value** | 192.168.10.10,192.168.10.11 |
-| **Description** | Pi-hole DNS servers |
+| **Description** | Pi-hole DNS servers (all VLANs) |
+
+| Setting | Value |
+|---------|-------|
+| **Interface** | DMZ |
+| **Option** | dns-server [6] |
+| **Value** | 1.1.1.2,1.0.0.2 |
+| **Description** | Cloudflare 1.1.1.1 for Families (malware blocking) for DMZ |
+
+> The DMZ-scoped option overrides the global entry for VLAN 250 clients. DMZ devices use [Cloudflare 1.1.1.1 for Families — malware only](https://blog.cloudflare.com/introducing-1-1-1-1-for-families/) (1.1.1.2 / 1.0.0.2). This blocks known malware domains without Pi-hole involvement.
 
 Click **Save** → **Apply**
 
@@ -321,11 +355,12 @@ ping 192.168.11.1   # WIFI_SECURE
 ping 192.168.20.1   # GUEST
 ping 192.168.21.1   # HomeAssist
 ping 192.168.30.1   # Boys
+ping 192.168.250.1  # DMZ
 ```
 
 ### 3. Verify VLAN Interfaces
 
-Check that all VLAN interfaces appear under Interfaces → Overview and show Status: up with the correct IPv4 addresses. You should see em1_vlan10, em1_vlan11, em1_vlan20, em1_vlan21 in addition to LAN (em1) and WAN (em0).
+Check that all VLAN interfaces appear under Interfaces → Overview and show Status: up with the correct IPv4 addresses. You should see em1_vlan10, em1_vlan11, em1_vlan20, em1_vlan21, em1_vlan30, em1_vlan250 in addition to LAN (em1) and WAN (em0).
 
 ### 4. Monitor Traffic
 
