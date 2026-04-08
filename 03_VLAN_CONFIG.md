@@ -308,8 +308,8 @@ Add a host entry for each device that needs a stable IP:
 | Hostname | MAC | IP | Interface |
 |----------|-----|----|-----------|
 | aruba2530 | (switch MAC — check label) | 192.168.1.2 | MGMT (LAN) |
-| pihole-primary | d8:3a:dd:29:b9:06 | 192.168.10.10 | SERVERS |
-| pihole-backup | b8:27:eb:d4:91:e6 | 192.168.10.11 | SERVERS |
+| pihole01 | d8:3a:dd:29:b9:06 | 192.168.10.10 | SERVERS |
+| pihole02 | b8:27:eb:d4:91:e6 | 192.168.10.11 | SERVERS |
 | nas01 | 78:45:c4:22:63:89 | 192.168.10.20 | SERVERS |
 | vm01 | d4:81:d7:5f:5d:dd | 192.168.10.21 | SERVERS |
 | U6MainLevel | 0c:ea:14:81:bc:31 | 192.168.10.60 | SERVERS |
