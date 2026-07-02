@@ -180,7 +180,7 @@ After Pi-holes join the tailnet (handled by NixOS):
 1. Go to `https://login.tailscale.com/admin/machines`
 2. For each Pi-hole:
    - Verify machine name matches `pihole01` / `pihole02`
-   - **Edit tags** → add `tag:server`
+   - **Edit tags** → add `tag:device`
    - **Disable key expiry**
 
 ### Configure Pi-hole as Tailscale DNS
@@ -326,8 +326,8 @@ ssh scott@pihole01 sudo systemctl start pihole-ftl
 [ ] Pi-hole primary resolves DNS (dig @192.168.10.10 google.com +short)
 [ ] Pi-hole backup resolves DNS (dig @192.168.10.11 google.com +short)
 [ ] Source IPs visible in Pi-hole query log (device IPs, not router IP)
-[ ] Tailscale admin: pihole01 tagged tag:server, key expiry disabled
-[ ] Tailscale admin: pihole02 tagged tag:server, key expiry disabled
+[ ] Tailscale admin: pihole01 tagged tag:device, key expiry disabled
+[ ] Tailscale admin: pihole02 tagged tag:device, key expiry disabled
 [ ] Tailscale DNS configured: global nameserver 192.168.10.10
 [ ] Web UI accessible at https://pihole01.warthog-royal.ts.net
 ```

@@ -61,7 +61,7 @@ Prevents authentication from expiring after 180 days.
 
 ### Step 6 — Assign Tag
 
-Click **Edit tags** → add `tag:network` → Save.
+Click **Edit tags** → add `tag:device` → Save.
 
 ---
 
@@ -218,25 +218,23 @@ In Tailscale admin console → **DNS → Settings**:
 
 ### ACL Policy
 
-ACLs are managed in the `tailnet/` submodule (`tailnet/policy.hujson`).
+ACLs are managed in the `tailnet/` submodule (`tailnet/policy.hujson`, private repo).
 Changes committed and pushed deploy via GitHub Actions.
 
-Key rules:
-- `group:admin` → full access to everything
-- All members → access Secure_Net (192.168.0.0/20); Guest/IoT (192.168.16.0/20) intentionally blocked
-- Tagged devices → full mesh (tagged-to-tagged)
-- `tag:mgmt-admin` → SSH and HTTPS to network devices
-- **SSH**: admin check-mode (12h re-auth) to tagged infra; members SSH to own devices only
-- See [tailnet/README.md](../tailnet/README.md) for full SSH and ACL rule documentation
+The current policy is intentionally flat (allow-all between tailnet devices, single
+open SSH rule) as an interim state pending migration to Nebula. VLAN segmentation is
+enforced by the OPNsense firewall, not by Tailscale ACLs. See the tailnet repo's
+README for details and the security trade-offs.
 
-### Recommended Device Tags
+### Device Tags
 
 | Device | Tags |
 |--------|------|
-| OPNsense | `tag:network` |
-| Pi-hole Primary/Backup | `tag:server` |
-| NAS01 | `tag:nas`, `tag:server` |
-| Admin Laptop | `tag:mgmt-admin` |
+| Physical/VM devices (OPNsense, Pi-holes, NAS, laptops, …) | `tag:device` |
+| Containers | `tag:container` |
+
+Tailscale SSH rules only match tagged destinations, so a device without `tag:device`
+is not reachable via `tailscale ssh`.
 
 ---
 
@@ -262,7 +260,7 @@ sudo tailscale up --accept-routes --ssh
 [ ] em3 break-glass (192.168.99.1) still accessible — unaffected
 [ ] SSH works: ssh scott@opnsense.warthog-royal.ts.net
 [ ] Key expiry disabled on OPNsense device in Tailscale admin
-[ ] Device tagged as tag:network
+[ ] Device tagged as tag:device
 ```
 
 ---
