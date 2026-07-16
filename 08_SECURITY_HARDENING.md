@@ -453,7 +453,7 @@ Check the firewall logs for blocked attempts:
 
 ### Configure Centralized Logging
 
-Forward OPNsense logs to `sands-log01` (syslog server) via Tailscale for centralized monitoring.
+Forward OPNsense logs to `log01` (syslog server) via Tailscale for centralized monitoring.
 
 **Navigation**: System → Settings → Logging / targets
 
@@ -464,16 +464,23 @@ Forward OPNsense logs to `sands-log01` (syslog server) via Tailscale for central
 | **Transport** | UDP(4) |
 | **Applications** | `audit,configd.py,dhcpd,dhcrelay,dnsmasq,filterlog,firewall,dpinger,hostwatch,charon,kea-dhcp4,kernel,ntp,ntpd,openvpn,pkg,suricata,wireguard` |
 | **Levels** | `info,notice,warn,err,crit,alert,emerg` |
-| **Hostname** | `sands-log01.warthog-royal.ts.net` |
+| **Hostname** | `log01.warthog-royal.ts.net` |
 | **Port** | `514` |
 | **RFC 5424** | ✓ enabled |
-| **Description** | `Log everything except DEBUG to sands-log01` |
+| **Description** | `Log everything except DEBUG to log01` |
 
 **Click:** Save → Apply
 
-> OPNsense uses the Tailscale FQDN directly (not the Pi-hole local alias) so logging
-> works even if Pi-hole is down. The `syslog-server` local hostname (192.168.10.22) and
-> the Tailscale name `sands-log01.warthog-royal.ts.net` resolve to the same host.
+> OPNsense uses the Tailscale FQDN directly (not a LAN IP) so logging survives DHCP
+> changes on the syslog host. Two prerequisites for the FQDN to resolve on the firewall:
+>
+> 1. **Unbound Query Forwarding**: forward domain `ts.net` to `100.100.100.100`
+>    (Tailscale MagicDNS) — Services → Unbound DNS → Query Forwarding.
+> 2. **Tailscale must not manage system DNS**: `tailscale set --accept-dns=false`.
+>    With accept-dns enabled on OPNsense/FreeBSD, tailscaled fails to read the system
+>    DNS configuration and its MagicDNS resolver returns SERVFAIL for all queries.
+>
+> Received logs land on `log01` under `/var/log/remote/OPNsense.internal/<program>.log`.
 
 ### Disable Unused Services
 
