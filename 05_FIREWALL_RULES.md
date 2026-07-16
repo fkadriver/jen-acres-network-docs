@@ -384,12 +384,18 @@ These auto-generated aliases will be used in the floating rules below. The namin
 
 ---
 
-### Floating Rule 8: Block All Client Networks from MGMT
+### Floating Rule 8: Client VLAN → MGMT Policy (interim)
+
+> **Interim posture**: WIFI_SECURE and SERVERS are deliberately *allowed* to reach the
+> MGMT network for now (Pi-hole PTR lookups to the firewall, controller/AP management,
+> web UI access from trusted VLANs). The unsecure VLANs (GUEST, HomeAssist, Boys) are
+> already denied MGMT access by the isolation rule above (`Secure_Net` includes
+> 192.168.1.0/24). Revisit and tighten to a Block when the Nebula overlay lands.
 
 **Click:** + Add
 
 **General Settings:**
-- **Action**: Block
+- **Action**: Pass
 - **Quick**: ✓
 - **Interface**: Select all client interfaces:
   - ✓ SERVERS
@@ -409,7 +415,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
 
 **Extra Options:**
 - **Protocol**: any
-- **Description**: `Block all client networks from management network`
+- **Description**: `Allow WiFI_Secure and SERVERS to MGMT network (interim until Nebula; unsecure VLANs blocked by isolation rule)`
 - **Category**: Security (optional)
 - **Log**: ✓ (optional - useful for troubleshooting)
 
