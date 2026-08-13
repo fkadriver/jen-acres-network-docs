@@ -79,6 +79,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.1*
 6. **Pi-hole setup** → [docs/06_PIHOLE_SETUP.md](docs/06_PIHOLE_SETUP.md)
 7. **UniFi AP setup** → [docs/07_UNIFI_AP_SETUP.md](docs/07_UNIFI_AP_SETUP.md)
 8. **Security hardening** → [docs/08_SECURITY_HARDENING.md](docs/08_SECURITY_HARDENING.md)
+9. **nfSensei migration (future)** → [docs/09_NFSENSEI_MIGRATION.md](docs/09_NFSENSEI_MIGRATION.md)
 
 ## Repository Structure
 
@@ -94,6 +95,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.1*
 │   ├── 06_PIHOLE_SETUP.md                 # Pi-hole setup (primary + backup, iOS app, syslog)
 │   ├── 07_UNIFI_AP_SETUP.md               # UniFi U6-Pro access point setup
 │   ├── 08_SECURITY_HARDENING.md           # Security hardening (users, SSH, 2FA)
+│   ├── 09_NFSENSEI_MIGRATION.md           # nfSensei migration tracking (future)
 │   └── TROUBLESHOOTING.md                 # Consolidated troubleshooting guide
 ├── tailnet/                               # Tailscale ACL policy (git submodule)
 │   ├── policy.hujson                      # Tailscale ACL configuration
