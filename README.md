@@ -80,6 +80,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.1*
 7. **UniFi AP setup** → [docs/07_UNIFI_AP_SETUP.md](docs/07_UNIFI_AP_SETUP.md)
 8. **Security hardening** → [docs/08_SECURITY_HARDENING.md](docs/08_SECURITY_HARDENING.md)
 9. **nfSensei migration (future)** → [docs/09_NFSENSEI_MIGRATION.md](docs/09_NFSENSEI_MIGRATION.md)
+10. **Starlink multi-WAN** → [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md)
 
 ## Repository Structure
 
@@ -96,6 +97,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.1*
 │   ├── 07_UNIFI_AP_SETUP.md               # UniFi U6-Pro access point setup
 │   ├── 08_SECURITY_HARDENING.md           # Security hardening (users, SSH, 2FA)
 │   ├── 09_NFSENSEI_MIGRATION.md           # nfSensei migration tracking (future)
+│   ├── 10_STARLINK_MULTIWAN.md            # Starlink multi-WAN load balancing (em2)
 │   └── TROUBLESHOOTING.md                 # Consolidated troubleshooting guide
 ├── tailnet/                               # Tailscale ACL policy (git submodule)
 │   ├── policy.hujson                      # Tailscale ACL configuration
