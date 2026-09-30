@@ -222,7 +222,9 @@ ACLs are managed in the `tailnet/` submodule (`tailnet/policy.hujson`, private r
 Changes committed and pushed deploy via GitHub Actions.
 
 The current policy is intentionally flat (allow-all between tailnet devices, single
-open SSH rule) as an interim state pending migration to Nebula. VLAN segmentation is
+open SSH rule) — this is the accepted long-term posture, not an interim state (a prior
+plan to replace Tailscale with a self-hosted Nebula overlay was evaluated and put on
+permanent hold; see `archive/nebula/` in the parent repo). VLAN segmentation is
 enforced by the OPNsense firewall, not by Tailscale ACLs. See the tailnet repo's
 README for details and the security trade-offs.
 

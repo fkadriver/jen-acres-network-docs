@@ -384,13 +384,15 @@ These auto-generated aliases will be used in the floating rules below. The namin
 
 ---
 
-### Floating Rule 8: Client VLAN → MGMT Policy (interim)
+### Floating Rule 8: Client VLAN → MGMT Policy
 
-> **Interim posture**: WIFI_SECURE and SERVERS are deliberately *allowed* to reach the
-> MGMT network for now (Pi-hole PTR lookups to the firewall, controller/AP management,
-> web UI access from trusted VLANs). The unsecure VLANs (GUEST, HomeAssist, Boys) are
-> already denied MGMT access by the isolation rule above (`Secure_Net` includes
-> 192.168.1.0/24). Revisit and tighten to a Block when the Nebula overlay lands.
+> **Accepted posture**: WIFI_SECURE and SERVERS are deliberately *allowed* to reach the
+> MGMT network (Pi-hole PTR lookups to the firewall, controller/AP management, web UI
+> access from trusted VLANs). The unsecure VLANs (GUEST, HomeAssist, Boys) are already
+> denied MGMT access by the isolation rule above (`Secure_Net` includes 192.168.1.0/24).
+> This was previously framed as "interim until Nebula tightens it" — the Nebula
+> migration is now permanently on hold (see `archive/nebula/` in the parent repo), so
+> this is the accepted long-term rule, not a placeholder awaiting replacement.
 
 **Click:** + Add
 
@@ -415,7 +417,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
 
 **Extra Options:**
 - **Protocol**: any
-- **Description**: `Allow WiFI_Secure and SERVERS to MGMT network (interim until Nebula; unsecure VLANs blocked by isolation rule)`
+- **Description**: `Allow WiFI_Secure and SERVERS to MGMT network (unsecure VLANs blocked by isolation rule)`
 - **Category**: Security (optional)
 - **Log**: ✓ (optional - useful for troubleshooting)
 
