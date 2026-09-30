@@ -25,7 +25,9 @@
 | 3 | Pi-hole Primary | Access | VLAN 10 |
 | 4 | VM01 | Access | VLAN 10 |
 | 5 | Pi-hole Backup | Access | VLAN 10 |
-| 6-12 | Available | — | — |
+| 6 | Available | — | — |
+| 7 | NAS01 iDRAC (Dell T330, `idrac-NAS01.local`, 192.168.10.19) | Access | VLAN 10 |
+| 8-12 | Available | — | — |
 | 13 | U6Basement AP (PoE+) | Trunk | Native VLAN 10; Tagged 11, 20, 21 |
 | 14 | U6MainLevel AP (PoE+) | Trunk | Native VLAN 10; Tagged 11, 20, 21 |
 | 15-23 | Available | — | — |
@@ -44,7 +46,9 @@
 | 3 (Pi-hole 1) | — | **U** | — | — | — | — | — |
 | 4 (VM01) | — | **U** | — | — | — | — | — |
 | 5 (Pi-hole 2) | — | **U** | — | — | — | — | — |
-| 6-12 (Available) | **U** | — | — | — | — | — | — |
+| 6 (Available) | **U** | — | — | — | — | — | — |
+| 7 (NAS01 iDRAC) | — | **U** | — | — | — | — | — |
+| 8-12 (Available) | **U** | — | — | — | — | — | — |
 | 13 (U6Basement) | — | **U** | T | T | T | — | — |
 | 14 (U6MainLevel) | — | **U** | T | T | T | — | — |
 | 15-23 (Available) | **U** | — | — | — | — | — | — |

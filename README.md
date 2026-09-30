@@ -43,6 +43,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
   - Port 2: NAS01 (VLAN 10)
   - Ports 3, 5: Pi-holes (VLAN 10)
   - Port 4: VM01 (VLAN 10)
+  - Port 7: NAS01 iDRAC (Dell T330, VLAN 10)
   - Ports 13-14: UniFi APs (PoE+, trunk VLANs 10/11/20/21)
   - Port 23: DSL Modem (VLAN 254 DMZ — bypasses router)
   - Port 24: Management Laptop (VLAN 1)
