@@ -497,6 +497,13 @@ After creating all rules, verify the order in **Firewall → Rules → Floating*
 
 With floating rules handling security policies, per-interface rules become **very simple**.
 
+> **Starlink multi-WAN**: the internet-facing "allow to any" rule on each client network
+> below (MGMT, SERVERS, WIFI_SECURE, GUEST, HomeAssist, and the Cailin/Boys network) has
+> its **Gateway** field set to `WAN_BALANCE` — a gateway group that load-balances 50/50
+> against the Starlink secondary WAN. DMZ is excluded (it bypasses the router entirely),
+> and Tailscale traffic is deliberately kept off the balanced group. See
+> [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md) for the full setup and rationale.
+
 ### MGMT (LAN) Interface Rules
 
 **Navigate:** Firewall → Rules → MGMT (or LAN)
@@ -507,6 +514,7 @@ With floating rules handling security policies, per-interface rules become **ver
 - **Protocol**: any
 - **Source**: MGMT net
 - **Destination**: any
+- **Gateway**: `WAN_BALANCE`
 - **Description**: `Allow management network full access`
 
 **Click:** Save → Apply Changes
@@ -525,6 +533,7 @@ Both Secure_Net interfaces use the same single rule — floating rules handle MG
 - **Protocol**: any
 - **Source**: *[interface]* net
 - **Destination**: any
+- **Gateway**: `WAN_BALANCE`
 - **Description**: `Allow internet and LAN access (MGMT blocked by floating rule)`
 
 **Click:** Save → Apply Changes
@@ -567,6 +576,7 @@ All three Unsecure_Net interfaces use the same single rule — floating rules ha
 - **Protocol**: any
 - **Source**: *[interface]* net
 - **Destination**: any
+- **Gateway**: `WAN_BALANCE`
 - **Description**: `Allow internet access (isolation enforced by floating rules)`
 
 **Click:** Save → Apply Changes
@@ -589,13 +599,14 @@ So these networks get **internet only** + **DNS to Pi-hole**.
 
 **Mode:** Ensure it's set to **Hybrid outbound NAT rule generation** (default)
 
-**Verify automatic rules exist for all networks:**
-- MGMT (LAN) → WAN
-- SERVERS → WAN
-- WIFI_SECURE → WAN
-- GUEST → WAN
-- HomeAssist → WAN
-- Boys → WAN
+**Verify automatic rules exist for all networks, for both WANs (Hybrid mode auto-covers
+any interface with a gateway, including Starlink):**
+- MGMT (LAN) → WAN, → STARLINK
+- SERVERS → WAN, → STARLINK
+- WIFI_SECURE → WAN, → STARLINK
+- GUEST → WAN, → STARLINK
+- HomeAssist → WAN, → STARLINK
+- Boys → WAN, → STARLINK
 - DMZ → WAN
 
 These should be auto-generated. If missing, click **Save** to regenerate.

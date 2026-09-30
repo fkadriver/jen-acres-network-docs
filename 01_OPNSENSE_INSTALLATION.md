@@ -9,15 +9,16 @@
 - **Storage**: 32GB mSATA SSD
 - **NICs** (4x Intel Gigabit Ethernet):
   - Intel I211 chipset (igb driver in FreeBSD)
-  - `em0` - WAN (to ISP modem/router)
+  - `em0` - WAN (to ISP modem/router — Kinetic)
   - `em1` - VLAN trunk (to Aruba 2530-24G switch)
-  - `em2` - Unused
+  - `em2` - STARLINK (second WAN, Starlink V5 — see [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md))
   - `em3` - Break-glass emergency access (isolated 192.168.99.0/29, NOT in use for VLANs)
 - **Power**: Low power consumption (~6W idle), fanless design
 - **Form Factor**: Compact, ideal for always-on router duty
 
 **NIC roles**: em1 carries all VLAN trunks (native VLAN 1/MGMT + tagged VLANs 10/11/20/21/30)
-to the Aruba 2530-24G switch. em2 is unused. em3 is a physically isolated out-of-band port —
+to the Aruba 2530-24G switch. em2 carries the Starlink multi-WAN link (assigned as
+interface `opt9`). em3 is a physically isolated out-of-band port —
 **configured immediately after first login**, before VLANs or firewall rules. It is your
 safety net for all subsequent work.
 

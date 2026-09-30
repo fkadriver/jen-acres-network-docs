@@ -1,6 +1,6 @@
 # Home Network Configuration - OPNsense
 
-Complete network configuration for x86 quad-port router running **OPNsense 26.1** (FreeBSD-based) with VLAN segmentation, Pi-hole DNS filtering, Tailscale subnet routing, and comprehensive security policies.
+Complete network configuration for x86 quad-port router running **OPNsense 26.7.5** (FreeBSD-based) with VLAN segmentation, Pi-hole DNS filtering, Tailscale subnet routing, Starlink multi-WAN load balancing, and comprehensive security policies.
 
 > **Note**: Previous OpenWRT configurations are preserved in [`archive/openwrt/`](archive/openwrt/) for reference.
 
@@ -24,7 +24,9 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.1*
 - **Secure_Net**: 192.168.0.0/20 (MGMT, SERVERS, WIFI_SECURE)
 - **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist, Boys)
 
-**WAN**: 192.168.254.0/24 (DHCP from 192.168.254.254)
+- **WAN (primary)**: 192.168.254.0/24 (DHCP from 192.168.254.254, ISP: Kinetic)
+- **WAN (secondary)**: Starlink V5, DHCP/CGNAT on em2 (opt9) — 50/50 load-balanced against
+  primary via a gateway group. See [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md).
 
 ## Hardware
 
@@ -32,9 +34,9 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.1*
   - Fanless x86_64 mini PC
   - 4GB RAM, 32GB mSATA SSD
   - 4x Intel Gigabit Ethernet ports:
-    - `em0`: WAN (to ISP modem/router)
+    - `em0`: WAN (to ISP modem/router — Kinetic)
     - `em1`: LAN/trunk (to Aruba switch — carries all VLANs)
-    - `em2`: Unused
+    - `em2`: STARLINK (second WAN, Starlink V5, opt9)
     - `em3`: Break-glass emergency access (192.168.99.0/29)
 - **Switch**: HPE Aruba 2530-24G PoE+ J9773A (192.168.1.2, managed, VLAN-capable, 195W PoE+)
   - Port 1: Router trunk (VLANs 1, 10, 11, 20, 21, 30)
@@ -54,6 +56,8 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.1*
 
 ## Features
 
+- ✅ **Starlink Multi-WAN**: 50/50 load-balanced with primary WAN (Kinetic), sticky
+  connections, verified failover via live gateway monitoring on both links
 - ✅ **Network Segmentation**: 5 isolated networks via VLANs
 - ✅ **UniFi WiFi**: Centrally managed U6-Pro APs with multiple SSIDs
 - ✅ **Tailscale Integration**: Subnet router advertising `192.168.0.0/16`, ACLs managed via git
