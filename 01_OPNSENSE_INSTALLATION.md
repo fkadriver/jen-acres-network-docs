@@ -26,29 +26,27 @@ safety net for all subsequent work.
 
 ## Download OPNsense
 
-### Version: 26.1 "Witty Woodpecker" (Current)
-
-> **Existing install?** Skip this section. See [13_OPNSENSE_26_1_UPGRADE.md](13_OPNSENSE_26_1_UPGRADE.md)
-> for the in-place upgrade procedure.
+> This router is currently running **OPNsense 26.7.5**, kept current via
+> `opnsense-update` (System → Firmware, or `configctl firmware upgrade` + a reboot —
+> see the router's own update history rather than this doc for what's actually
+> installed). For a *fresh* install, get the current DVD image and checksum from the
+> official download page rather than a hardcoded URL here, since the version and
+> mirror paths below will inevitably go stale:
+> **https://opnsense.org/download/**
 
 **Download Image:**
 ```bash
 cd ~/Downloads
 
-# Download the amd64 DVD image
-wget https://mirror.ams1.nl.leaseweb.net/opnsense/releases/26.1/OPNsense-26.1-dvd-amd64.iso.bz2
-
-# Verify checksum (optional but recommended)
-wget https://mirror.ams1.nl.leaseweb.net/opnsense/releases/26.1/OPNsense-26.1-checksums-amd64.sha256
-sha256sum -c OPNsense-26.1-checksums-amd64.sha256 2>&1 | grep dvd
+# Get the current amd64 DVD image + checksum URLs from https://opnsense.org/download/
+# then, e.g.:
+wget <dvd-image-url>
+wget <checksum-url>
+sha256sum -c OPNsense-*-checksums-amd64.sha256 2>&1 | grep dvd
 
 # Extract the image
-bunzip2 OPNsense-26.1-dvd-amd64.iso.bz2
+bunzip2 OPNsense-*-dvd-amd64.iso.bz2
 ```
-
-**Alternative Mirrors:**
-- US: `https://mirror.wdc1.us.leaseweb.net/opnsense/releases/26.1/`
-- EU: `https://mirror.fra10.de.leaseweb.net/opnsense/releases/26.1/`
 
 ---
 
@@ -68,7 +66,7 @@ sudo fdisk -l /dev/sdX
 # CAUTION: This will erase all data on the USB drive!
 # Replace /dev/sdX with your actual USB device
 
-sudo dd if=OPNsense-26.1-dvd-amd64.iso of=/dev/sdX bs=4M status=progress oflag=sync
+sudo dd if=OPNsense-<version>-dvd-amd64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 
 # Wait for completion, then safely eject
 sudo sync
@@ -78,7 +76,7 @@ sudo eject /dev/sdX
 ### Alternative: Using Ventoy
 If you have Ventoy installed on your USB:
 ```bash
-cp OPNsense-26.1-dvd-amd64.iso /path/to/ventoy/usb/
+cp OPNsense-<version>-dvd-amd64.iso /path/to/ventoy/usb/
 ```
 
 ---
@@ -141,7 +139,9 @@ Do you want to proceed? [y/n]: y
 ```
 
 > Only assign em0 (WAN) and em1 (LAN) at the console. em3 is configured via the web UI
-> immediately after first login (see next section). em2 is not used.
+> immediately after first login (see next section). em2 is not assigned yet at this
+> stage — it later becomes the Starlink secondary WAN, configured separately; see
+> [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md).
 
 ### Set LAN IP Address
 
@@ -264,7 +264,7 @@ Once verified, **unplug the cable** and set it aside.
 
 ## Post-Installation Checklist
 
-- [ ] OPNsense 26.1 installed and accessible via em1 (https://192.168.1.1)
+- [ ] OPNsense installed and accessible via em1 (https://192.168.1.1)
 - [ ] WAN (em0) is up and has internet connectivity
 - [ ] LAN (em1) IP is 192.168.1.1 /24
 - [ ] Root password recorded securely

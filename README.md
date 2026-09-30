@@ -17,12 +17,12 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 | 192.168.11.0/24 | WIFI_SECURE | em1 (VLAN 11 trunk) | Wireless Secured | Secure_Net | Enabled | Router: .1 |
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20 trunk) | Guest Access | Unsecure_Net | Enabled | Router: .1 |
 | 192.168.21.0/24 | HomeAssist | em1 (VLAN 21 trunk) | Home Automation/IoT | Unsecure_Net | Enabled | Router: .1 |
-| 192.168.30.0/24 | Boys | em1 (VLAN 30 trunk) | Personal (Boys) | Unsecure_Net | Enabled | Router: .1 |
-| 192.168.254.0/24 | DMZ | Switch port 23 | DMZ — direct modem, bypasses router | — | Modem (.254) | From modem |
+| 192.168.30.0/24 | Cailin | em1 (VLAN 30 trunk) | Personal (Cailin) | Unsecure_Net | Enabled | Router: .1 |
+| 192.168.250.0/24 | DMZ | em1 (VLAN 250 trunk) | Isolated internet-only, routed through OPNsense | — | Router: .1 | Enabled |
 
 **Supernet Aliases (for simplified firewall rules):**
 - **Secure_Net**: 192.168.0.0/20 (MGMT, SERVERS, WIFI_SECURE)
-- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist, Boys)
+- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist, Cailin)
 
 - **WAN (primary)**: 192.168.254.0/24 (DHCP from 192.168.254.254, ISP: Kinetic)
 - **WAN (secondary)**: Starlink V5, DHCP/CGNAT on em2 (opt9) — 50/50 load-balanced against
@@ -45,9 +45,8 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
   - Port 4: VM01 (VLAN 10)
   - Port 7: NAS01 iDRAC (Dell T330, VLAN 10)
   - Ports 13-14: UniFi APs (PoE+, trunk VLANs 10/11/20/21)
-  - Port 23: DSL Modem (VLAN 254 DMZ — bypasses router)
   - Port 24: Management Laptop (VLAN 1)
-  - Port 25 (SFP): NetGear GS310TP trunk (Native VLAN 30, Tagged VLAN 254)
+  - Port 25 (SFP): NetGear GS310TP trunk (Native VLAN 30)
 - **WiFi**: 2x Ubiquiti UniFi U6-Pro (802.11ax, PoE+ powered via switch)
   - U6Basement (192.168.10.61, port 13), U6MainLevel (192.168.10.60, port 14)
   - Managed via UniFi Controller on vm01 (192.168.10.21)
@@ -65,7 +64,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 - ✅ **Pi-hole DNS**: Network-wide ad blocking with redundant DNS (primary + backup)
 - ✅ **Security Hardening**: Admin users, SSH keys, 2FA, disabled root login
 - ✅ **Security Policies**:
-  - MGMT network internet access via Tailscale exit nodes only
+  - MGMT network has direct internet access (also reachable via Tailscale)
   - Guest network fully isolated
   - Home Automation/IoT isolated from secure networks
   - Wireless Secured with general internet access
@@ -135,14 +134,14 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 
 ### Management Network Security
 - **Isolated Management**: MGMT network for router and switch management only
-- **Tailscale-Only Internet**: MGMT network internet access via Tailscale exit nodes
+- **Direct + Tailscale Internet**: MGMT network has direct internet access, also reachable via Tailscale
 - **Static IPs**: No DHCP on MGMT network for tighter control
 - **Emergency Access**: Console access always available (keyboard/monitor)
 
 ## Security Notes
 
 - **Admin Users**: Dedicated admin users with SSH keys and 2FA (root login disabled)
-- **MGMT Network**: No direct internet access; use Tailscale exit nodes for updates
+- **MGMT Network**: Direct internet access enabled (not Tailscale-exit-node-only)
 - **Network Segmentation**: Secure_Net (MGMT, SERVERS, WIFI_SECURE) vs Unsecure_Net (GUEST, HomeAssist)
 - **Isolated Networks**: Guest and Home Automation networks cannot access secure networks
 - **IoT Isolation**: Home Automation devices on separate VLAN from guest and secure networks

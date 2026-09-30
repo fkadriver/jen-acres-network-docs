@@ -8,7 +8,7 @@ Your supernet architecture enables simplified firewall management:
 
 **Network Segmentation:**
 - **Secure_Net** (192.168.0.0/20): MGMT, SERVERS, WIFI_SECURE
-- **Unsecure_Net** (192.168.16.0/20): GUEST, HomeAssist, Boys
+- **Unsecure_Net** (192.168.16.0/20): GUEST, HomeAssist, Cailin
 
 **Benefits:**
 - ✅ **9 floating rules** instead of 20+ interface rules
@@ -44,7 +44,7 @@ Before creating floating rules, create aliases for easier management.
 - **Name**: `Unsecure_Net`
 - **Type**: Network(s)
 - **Content**: `192.168.16.0/20`
-- **Description**: `Isolated networks (GUEST, HomeAssist, Boys)`
+- **Description**: `Isolated networks (GUEST, HomeAssist, Cailin)`
 
 **Click:** Save
 
@@ -213,7 +213,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ WIFI_SECURE
   - ✓ GUEST
   - ✓ HomeAssist
-  - ✓ Boys
+  - ✓ Cailin
   - ✓ DMZ
 - **Destination**: This Firewall
 - **Destination port range**: HTTPS
@@ -271,7 +271,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ WIFI_SECURE
   - ✓ GUEST
   - ✓ HomeAssist
-  - ✓ Boys
+  - ✓ Cailin
   - ✓ DMZ
 - **Direction**: in
 - **TCP/IP Version**: IPv4
@@ -304,7 +304,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ WIFI_SECURE
   - ✓ GUEST
   - ✓ HomeAssist
-  - ✓ Boys
+  - ✓ Cailin
   - ✗ DMZ *(excluded — DMZ uses Cloudflare 1.1.1.2/1.0.0.2 via DHCP, not Pi-hole)*
 - **Direction**: in
 - **TCP/IP Version**: IPv4
@@ -364,7 +364,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
 - **Interface**: Select isolated networks:
   - ✓ GUEST
   - ✓ HomeAssist
-  - ✓ Boys
+  - ✓ Cailin
 - **Direction**: in
 - **TCP/IP Version**: IPv4
 
@@ -388,7 +388,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
 
 > **Accepted posture**: WIFI_SECURE and SERVERS are deliberately *allowed* to reach the
 > MGMT network (Pi-hole PTR lookups to the firewall, controller/AP management, web UI
-> access from trusted VLANs). The unsecure VLANs (GUEST, HomeAssist, Boys) are already
+> access from trusted VLANs). The unsecure VLANs (GUEST, HomeAssist, Cailin) are already
 > denied MGMT access by the isolation rule above (`Secure_Net` includes 192.168.1.0/24).
 > This was previously framed as "interim until Nebula tightens it" — the Nebula
 > migration is now permanently on hold (see `archive/nebula/` in the parent repo), so
@@ -404,7 +404,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ WIFI_SECURE
   - ✓ GUEST
   - ✓ HomeAssist
-  - ✓ Boys
+  - ✓ Cailin
   - ✓ DMZ
 - **Direction**: in
 - **TCP/IP Version**: IPv4
@@ -437,7 +437,7 @@ These auto-generated aliases will be used in the floating rules below. The namin
   - ✓ WIFI_SECURE
   - ✓ GUEST
   - ✓ HomeAssist
-  - ✓ Boys
+  - ✓ Cailin
   - ✓ DMZ
 - **Direction**: in
 - **TCP/IP Version**: IPv4
@@ -471,14 +471,14 @@ After creating all rules, verify the order in **Firewall → Rules → Floating*
 | # | Action | Quick | Interface | Source | Destination | Description |
 |---|--------|-------|-----------|--------|-------------|-------------|
 | 1 | Pass | ✓ | MGMT_LAN, Tailscale | Management_Access | This Firewall:443 | Allow web UI from MGMT/Tailscale |
-| 2 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys, DMZ | any | This Firewall:443 | Block web UI from unauthorized |
+| 2 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin, DMZ | any | This Firewall:443 | Block web UI from unauthorized |
 | 3 | Pass | ✓ | MGMT_LAN, Tailscale | Management_Access | This Firewall:22 | Allow SSH from MGMT/Tailscale |
-| 4 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys, DMZ | any | This Firewall:22 | Block SSH from unauthorized |
-| 5 | Pass | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys | any | Pi_hole_DNS:53 | Allow DNS to Pi-hole (not DMZ) |
+| 4 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin, DMZ | any | This Firewall:22 | Block SSH from unauthorized |
+| 5 | Pass | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin | any | Pi_hole_DNS:53 | Allow DNS to Pi-hole (not DMZ) |
 | 6 | Block | ✓ | DMZ | any | Internal_Network (192.168.0.0/19) | Block DMZ → all internal networks |
-| 7 | Block | ✓ | GUEST, HomeAssist, Boys | Unsecure_Net | Secure_Net | Block isolated → secure |
-| 8 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys, DMZ | any | MGMT net | Block clients → MGMT |
-| 9 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Boys, DMZ | any | WAN_Net | Block clients → ISP network |
+| 7 | Block | ✓ | GUEST, HomeAssist, Cailin | Unsecure_Net | Secure_Net | Block isolated → secure |
+| 8 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin, DMZ | any | MGMT net | Block clients → MGMT |
+| 9 | Block | ✓ | SERVERS, WIFI_SECURE, GUEST, HomeAssist, Cailin, DMZ | any | WAN_Net | Block clients → ISP network |
 
 **Why This Order?**
 1. **Web UI access first**: Allow management access from authorized networks
@@ -500,7 +500,7 @@ After creating all rules, verify the order in **Firewall → Rules → Floating*
 With floating rules handling security policies, per-interface rules become **very simple**.
 
 > **Starlink multi-WAN**: the internet-facing "allow to any" rule on each client network
-> below (MGMT, SERVERS, WIFI_SECURE, GUEST, HomeAssist, and the Cailin/Boys network) has
+> below (MGMT, SERVERS, WIFI_SECURE, GUEST, HomeAssist, and the Cailin/Cailin network) has
 > its **Gateway** field set to `WAN_BALANCE` — a gateway group that load-balances 50/50
 > against the Starlink secondary WAN. DMZ is excluded (it bypasses the router entirely),
 > and Tailscale traffic is deliberately kept off the balanced group. See
@@ -523,7 +523,7 @@ With floating rules handling security policies, per-interface rules become **ver
 
 ---
 
-### SERVERS (OPT1) and WIFI_SECURE (OPT2) Interface Rules
+### SERVERS (OPT3) and WIFI_SECURE (OPT1) Interface Rules
 
 Both Secure_Net interfaces use the same single rule — floating rules handle MGMT and ISP modem protection.
 
@@ -566,7 +566,7 @@ DMZ devices get **internet only** with Cloudflare malware-blocking DNS (1.1.1.2/
 
 ---
 
-### GUEST (OPT3), HomeAssist (OPT4), Boys (OPT5) Interface Rules
+### GUEST (OPT2), HomeAssist (OPT5), Cailin (OPT7) Interface Rules
 
 All three Unsecure_Net interfaces use the same single rule — floating rules handle all isolation.
 
@@ -574,7 +574,7 @@ All three Unsecure_Net interfaces use the same single rule — floating rules ha
 
 **Rule 1: Allow to Any**
 - **Action**: Pass
-- **Interface**: GUEST *(repeat for HomeAssist, Boys)*
+- **Interface**: GUEST *(repeat for HomeAssist, Cailin)*
 - **Protocol**: any
 - **Source**: *[interface]* net
 - **Destination**: any
@@ -608,7 +608,7 @@ any interface with a gateway, including Starlink):**
 - WIFI_SECURE → WAN, → STARLINK
 - GUEST → WAN, → STARLINK
 - HomeAssist → WAN, → STARLINK
-- Boys → WAN, → STARLINK
+- Cailin → WAN, → STARLINK
 - DMZ → WAN
 
 These should be auto-generated. If missing, click **Save** to regenerate.

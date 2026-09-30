@@ -4,11 +4,11 @@
 
 **Supernet Architecture:**
 - **Secure_Net**: 192.168.0.0/20 (MGMT, SERVERS, WIFI_SECURE)
-- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist)
+- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist, Cailin)
 
-**Key Design Feature**: All VLANs trunk through em1 on the Protectli to the Aruba switch. em3 is a dedicated, isolated break-glass port.
+**Key Design Feature**: All VLANs trunk through em1 on the Protectli to the Aruba switch. em3 is a dedicated, isolated break-glass port. em2 carries the Starlink secondary WAN (see [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)) — not a VLAN.
 - **em1** → Aruba 2530-24G switch (single trunk, all VLANs)
-- **em2** → Unused
+- **em2** → Starlink secondary WAN (`opt9`)
 - **em3** → Break-glass emergency access only (isolated /29, NOT in use for VLANs)
 
 | Network | Interface | Physical | Purpose | Supernet | Gateway | DHCP Range |
@@ -18,9 +18,13 @@
 | 192.168.11.0/24 | WIFI_SECURE | em1 (VLAN 11) | Wireless Secured | Secure_Net | 192.168.11.1 | 11.100-11.250 |
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20) | Guest Access | Unsecure_Net | 192.168.20.1 | 20.100-20.250 |
 | 192.168.21.0/24 | HomeAssist | em1 (VLAN 21) | HomeAssist/IoT | Unsecure_Net | 192.168.21.1 | 21.100-21.250 |
-| 192.168.30.0/24 | Boys | em1 (VLAN 30) | Personal (Boys) | Unsecure_Net | 192.168.30.1 | 30.100-30.250 |
+| 192.168.30.0/24 | Cailin | em1 (VLAN 30) | Personal (Cailin) | Unsecure_Net | 192.168.30.1 | 30.100-30.250 |
 | 192.168.250.0/24 | DMZ | em1 (VLAN 250) | DMZ — router-managed, internet DNS, no internal access | — | 192.168.250.1 | 250.100-250.250 |
 | 192.168.99.0/29 | MGMT_Only | em3 (isolated) | Break-glass emergency | — | 192.168.99.1 | 99.2-99.6 |
+
+> Note: `192.168.254.0/24` is the **WAN-side** subnet Kinetic's modem hands to `em0`
+> (see [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)) — it is unrelated to DMZ
+> despite an older version of this doc set conflating the two.
 
 ## Physical Topology
 
@@ -40,7 +44,8 @@
     Aruba──em1──────┤   Native: VLAN 1 (MGMT)          │
      (Intel I211)   │   Tagged: 10, 11, 20, 21, 30, 250 │
                     │                                   │
-                    │   em2: Unused                     │
+                    │   em2: Starlink secondary WAN     │
+                    │       (opt9 — see 10_STARLINK_MULTIWAN.md) │
                     │                                   │
     [Break-Glass]   │   em3: 192.168.99.1/29            │
     Laptop──em3─────┤   (isolated — not for VLANs)     │
@@ -58,6 +63,7 @@
     │ Port 3:  Pi-hole Primary (VLAN 10)                  │
     │ Port 4:  VM01          (VLAN 10)                    │
     │ Port 5:  Pi-hole Backup  (VLAN 10)                  │
+    │ Port 7:  NAS01 iDRAC   (VLAN 10)                    │
     │ Port 13: U6Basement PoE+ (VLAN 10+11+20+21)        │
     │ Port 14: U6MainLevel PoE+(VLAN 10+11+20+21)        │
     │ Port 23: Available     —                            │
@@ -69,7 +75,7 @@
 ## Step-by-Step Network Configuration (From Scratch)
 
 ### Prerequisites
-- OPNsense 26.1 installed and accessible (see [01_OPNSENSE_INSTALLATION.md](01_OPNSENSE_INSTALLATION.md))
+- OPNsense installed and accessible (see [01_OPNSENSE_INSTALLATION.md](01_OPNSENSE_INSTALLATION.md))
 - Connected via **em1** (directly or through the Aruba switch) for initial configuration — em3 break-glass is configured in [01_OPNSENSE_INSTALLATION.md](01_OPNSENSE_INSTALLATION.md)
 - Aruba 2530-24G switch configured with VLANs (see [04_SWITCH_CONFIG.md](04_SWITCH_CONFIG.md))
 
@@ -107,10 +113,10 @@ Create VLANs for all tagged networks. **Use `em1` as the parent interface**.
 - **Description**: HomeAssist
 - Click **Save**
 
-### VLAN 30 - Boys
+### VLAN 30 - Cailin
 - **Parent Interface**: em1
 - **VLAN tag**: 30
-- **Description**: Boys
+- **Description**: Cailin
 - Click **Save**
 
 ### VLAN 250 - DMZ
@@ -149,20 +155,29 @@ You should already see WAN (em0) and LAN (em1) assigned. LAN is already assigned
 1. **Device**: Select `em1_vlan250`
 2. Click **Add**
 
-After adding all interfaces:
+Also add the Tailscale interface (`tailscale0`, once the `os-tailscale` plugin is
+installed — see [02_TAILSCALE_SETUP.md](02_TAILSCALE_SETUP.md)) and em3 (break-glass,
+already done in [01_OPNSENSE_INSTALLATION.md](01_OPNSENSE_INSTALLATION.md)).
+
+> **OPT numbering isn't fixed**: OPNsense assigns `opt1`, `opt2`, etc. in whatever
+> order you add interfaces — it is **not** guaranteed to match the table below on a
+> fresh install. The table reflects this system's current live mapping (useful as a
+> reference when using the web UI), not a sequence to reproduce exactly. What matters
+> functionally is the VLAN tag and description, both of which this guide gets right.
 
 | Interface | Identifier | Device |
 |-----------|------------|--------|
 | [WAN]     | wan        | em0 |
-| [LAN]     | lan        | em1 — Native VLAN 1 (MGMT) |
-| [OPT1]    | opt1       | em1 VLAN 10 (SERVERS) |
-| [OPT2]    | opt2       | em1 VLAN 11 (WIFI_SECURE) |
-| [OPT3]    | opt3       | em1 VLAN 20 (GUEST) |
-| [OPT4]    | opt4       | em1 VLAN 21 (HomeAssist) |
-| [OPT5]    | opt5       | em1 VLAN 30 (Boys) |
-| [OPT6]    | opt6       | tailscale0 (Tailscale VPN) |
-| [OPT7]    | opt7       | em3 — Break-glass (MGMT_Only) *(configured in 01_OPNSENSE_INSTALLATION.md)* |
-| [OPT8]    | opt8       | em1 VLAN 250 (DMZ) |
+| [LAN]     | lan        | em1 — Native VLAN 1 (MGMT_LAN) |
+| [WiFI_Secure] | opt1   | em1 VLAN 11 (WIFI_SECURE) |
+| [GUEST]   | opt2       | em1 VLAN 20 (GUEST) |
+| [SERVERS] | opt3       | em1 VLAN 10 (SERVERS) |
+| [Tailscale] | opt4     | tailscale0 (Tailscale VPN) |
+| [HomeAssist] | opt5    | em1 VLAN 21 (HomeAssist) |
+| [MGMT_Only] | opt6     | em3 — Break-glass *(configured in 01_OPNSENSE_INSTALLATION.md)* |
+| [Cailin]  | opt7       | em1 VLAN 30 (Cailin) |
+| [DMZ]     | opt8       | em1 VLAN 250 (DMZ) |
+| [STARLINK] | opt9      | em2 (Starlink secondary WAN — see [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)) |
 
 Click **Save**
 
@@ -180,9 +195,9 @@ Click **Save**
 
 Click **Save** → **Apply Changes**
 
-### OPT1 (SERVERS - VLAN 10)
+### SERVERS (VLAN 10)
 
-**Navigation**: Interfaces → OPT1
+**Navigation**: Interfaces → [the OPT slot you added SERVERS as — see table above]
 
 - **Enable**: ✓
 - **Description**: SERVERS
@@ -191,31 +206,31 @@ Click **Save** → **Apply Changes**
 
 Click **Save** → **Apply Changes**
 
-### OPT2 (WIFI_SECURE - VLAN 11)
+### WIFI_SECURE (VLAN 11)
 
 - **Enable**: ✓
 - **Description**: WIFI_SECURE
 - **IPv4 address**: 192.168.11.1 / 24
 
-### OPT3 (GUEST - VLAN 20)
+### GUEST (VLAN 20)
 
 - **Enable**: ✓
 - **Description**: GUEST
 - **IPv4 address**: 192.168.20.1 / 24
 
-### OPT4 (HomeAssist - VLAN 21)
+### HomeAssist (VLAN 21)
 
 - **Enable**: ✓
 - **Description**: HomeAssist
 - **IPv4 address**: 192.168.21.1 / 24
 
-### OPT5 (Boys - VLAN 30)
+### Cailin (VLAN 30)
 
 - **Enable**: ✓
-- **Description**: Boys
+- **Description**: Cailin
 - **IPv4 address**: 192.168.30.1 / 24
 
-### OPT8 (DMZ - VLAN 250)
+### DMZ (VLAN 250)
 
 - **Enable**: ✓
 - **Description**: DMZ
@@ -262,8 +277,8 @@ Click **Save** → **Apply**
 #### HomeAssist (VLAN 21)
 - **Interface**: HomeAssist | **Start**: 192.168.21.100 | **End**: 192.168.21.250 | **Lease**: 86400
 
-#### Boys (VLAN 30)
-- **Interface**: Boys | **Start**: 192.168.30.100 | **End**: 192.168.30.250 | **Lease**: 86400
+#### Cailin (VLAN 30)
+- **Interface**: Cailin | **Start**: 192.168.30.100 | **End**: 192.168.30.250 | **Lease**: 86400
 
 #### DMZ (VLAN 250)
 - **Interface**: DMZ | **Start**: 192.168.250.100 | **End**: 192.168.250.250 | **Lease**: 3600
@@ -354,7 +369,7 @@ ping 192.168.10.1   # SERVERS
 ping 192.168.11.1   # WIFI_SECURE
 ping 192.168.20.1   # GUEST
 ping 192.168.21.1   # HomeAssist
-ping 192.168.30.1   # Boys
+ping 192.168.30.1   # Cailin
 ping 192.168.250.1  # DMZ
 ```
 

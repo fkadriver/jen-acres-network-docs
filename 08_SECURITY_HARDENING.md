@@ -329,7 +329,7 @@ Restrict web UI and SSH access to authorized networks using floating rules.
 
 **Click:** Save → Apply Changes
 
-**Note:** `MGMT__NET` is an auto-generated alias for the MGMT interface network (192.168.1.0/24). When you set up Tailscale, you'll add the `Tailscale_Net` alias to this group. See [08_TAILSCALE_SETUP.md](08_TAILSCALE_SETUP.md).
+**Note:** `MGMT__NET` is an auto-generated alias for the MGMT interface network (192.168.1.0/24). When you set up Tailscale, you'll add the `Tailscale_Net` alias to this group. See [02_TAILSCALE_SETUP.md](02_TAILSCALE_SETUP.md).
 
 #### Step 2: Create Floating Rules for Management Access
 
@@ -671,5 +671,4 @@ Configure alerts for:
 ## Related Documentation
 
 - [01_OPNSENSE_INSTALLATION.md](01_OPNSENSE_INSTALLATION.md) - Initial setup
-- [08_TAILSCALE_SETUP.md](08_TAILSCALE_SETUP.md) - Secure remote access via VPN
-- [09_TAILSCALE_HTTPS.md](09_TAILSCALE_HTTPS.md) - HTTPS certificates
+- [02_TAILSCALE_SETUP.md](02_TAILSCALE_SETUP.md) - Secure remote access via VPN, and HTTPS certificates

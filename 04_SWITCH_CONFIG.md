@@ -120,7 +120,7 @@ Note that the Aruba 2530 web UI calls this "VLAN Management". Navigation paths u
 | 11 | WiFi_Secure |
 | 20 | Guest |
 | 21 | HomeAuto |
-| 30 | Boys |
+| 30 | Cailin |
 | 250 | DMZ |
 
 ### Step 2: Configure Port 1 — Router Trunk (all VLANs)
@@ -166,7 +166,7 @@ For each AP port, VLAN 10 native + tagged 11, 20, 21:
 
 VLAN 250 is a router-managed DMZ. Add it to the Port 1 trunk (already included in Step 2 above). No dedicated access port is assigned yet — add ports as DMZ devices are connected.
 
-### Step 6: Configure VLAN 30 (Boys) on Port 1
+### Step 6: Configure VLAN 30 (Cailin) on Port 1
 
 VLAN 30 is routed through the Protectli (em1 trunk). Add it to Port 1:
 
@@ -185,7 +185,7 @@ Port 24 stays on default VLAN 1 Untagged — no change needed (default).
 | 1 | No |
 | 30 | Untagged |
 
-> Port 25 trunks to the NetGear GS310TP via SFP. VLAN 30 (Boys) is the native VLAN. VLAN 254 (old modem bypass DMZ) has been removed — the T3200 now connects directly to the router's em0 WAN port.
+> Port 25 trunks to the NetGear GS310TP via SFP. VLAN 30 (Cailin) is the native VLAN. VLAN 254 (old modem bypass DMZ) has been removed — the T3200 now connects directly to the router's em0 WAN port.
 
 ### Step 9: Port 26 (SFP) — DEAD
 
@@ -208,7 +208,7 @@ vlan 20
 vlan 21
   name "HomeAuto"
 vlan 30
-  name "Boys"
+  name "Cailin"
 vlan 250
   name "DMZ"
 
@@ -281,7 +281,7 @@ Expected VLAN summary:
 | 11 | WiFi_Secure | — | 1, 13, 14 |
 | 20 | Guest | — | 1, 13, 14 |
 | 21 | HomeAuto | — | 1, 13, 14 |
-| 30 | Boys | 25 | 1 |
+| 30 | Cailin | 25 | 1 |
 | 250 | DMZ | — | 1 |
 
 ---
@@ -320,10 +320,10 @@ The NetGear is connected via a single SFP uplink on Aruba Port 25. Port 26 is de
 
 | Aruba Port | VLAN | Mode | Network |
 |------------|------|------|---------|
-| 25 (SFP-1) | 30 | Native (untagged) | Boys (192.168.30.0/24) |
+| 25 (SFP-1) | 30 | Native (untagged) | Cailin (192.168.30.0/24) |
 | 26 (SFP-2) | — | DEAD | — |
 
-VLAN 30 (Boys) passes untagged — no special NetGear config required for that VLAN. VLAN 254 (old modem bypass DMZ) has been removed from this trunk; the T3200 modem now connects directly to the router's em0 WAN port.
+VLAN 30 (Cailin) passes untagged — no special NetGear config required for that VLAN. VLAN 254 (old modem bypass DMZ) has been removed from this trunk; the T3200 modem now connects directly to the router's em0 WAN port.
 
 > Note: If using an SFP-to-RJ45 adapter, ensure compatibility with the Aruba 2530.
 
