@@ -53,7 +53,7 @@ and deployed with `./scripts/deploy-piholes.sh` from latitude or vm01:
 - DNS listening mode (`ALL` — required for cross-VLAN access)
 - Upstream DNS: **Quad9** (`9.9.9.9`, `149.112.112.112`) with DNSSEC enabled
 - Blocking mode: `IP` (returns Pi-hole's own IP for blocked queries)
-- Conditional forwarding: per-VLAN reverse servers for 192.168.1.0/24, 192.168.10–11/24, 192.168.20–21/24, 192.168.30/24
+- Conditional forwarding: per-VLAN reverse servers for 192.168.1.0/24, 192.168.10–11/24, 192.168.20–21/24
 - iCloud Private Relay blocked (`specialDomains.iCloudPrivateRelay = false`)
 - Tailscale + `tailscale serve` (exposes web UI at `https://pihole0x.<tailnet>.ts.net`)
 - Web UI password from Bitwarden via sops-nix (`pihole-set-password.service`)
@@ -230,7 +230,6 @@ Should show per-VLAN entries (set by NixOS via `dns.revServers`):
 | `192.168.11.0/24` | `192.168.11.1` |
 | `192.168.20.0/24` | `192.168.20.1` |
 | `192.168.21.0/24` | `192.168.21.1` |
-| `192.168.30.0/24` | `192.168.30.1` |
 
 This allows Pi-hole to resolve PTR queries (reverse DNS) through each VLAN gateway,
 giving client hostnames in query logs instead of bare IPs.

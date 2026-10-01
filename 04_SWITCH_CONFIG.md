@@ -20,7 +20,7 @@
 
 | Port | Device | Mode | VLAN |
 |------|--------|------|------|
-| 1 | Router (em1) | Trunk | Native VLAN 1; Tagged 10, 11, 20, 21, 30, 250 |
+| 1 | Router (em1) | Trunk | Native VLAN 1; Tagged 10, 11, 20, 21, 250 |
 | 2 | NAS01 | Access | VLAN 10 |
 | 3 | Pi-hole Primary | Access | VLAN 10 |
 | 4 | VM01 | Access | VLAN 10 |
@@ -32,29 +32,29 @@
 | 14 | U6MainLevel AP (PoE+) | Trunk | Native VLAN 10; Tagged 11, 20, 21 |
 | 15-23 | Available | — | — |
 | 24 | Management Laptop | Access | VLAN 1 |
-| 25 | NetGear GS310TP (SFP uplink) | Trunk | Native VLAN 30 |
+| 25 | NetGear GS310TP (SFP uplink) | Trunk | Native VLAN 1; Tagged 250 |
 | 26 | **DEAD** (SFP port failed) | — | — |
 
 ---
 
 ## VLAN Membership Matrix
 
-| Port | VLAN 1 | VLAN 10 | VLAN 11 | VLAN 20 | VLAN 21 | VLAN 30 | VLAN 250 |
-|------|--------|---------|---------|---------|---------|---------|----------|
-| 1 (Router) | **U** | T | T | T | T | T | T |
-| 2 (NAS01) | — | **U** | — | — | — | — | — |
-| 3 (Pi-hole 1) | — | **U** | — | — | — | — | — |
-| 4 (VM01) | — | **U** | — | — | — | — | — |
-| 5 (Pi-hole 2) | — | **U** | — | — | — | — | — |
-| 6 (Available) | **U** | — | — | — | — | — | — |
-| 7 (NAS01 iDRAC) | — | **U** | — | — | — | — | — |
-| 8-12 (Available) | **U** | — | — | — | — | — | — |
-| 13 (U6Basement) | — | **U** | T | T | T | — | — |
-| 14 (U6MainLevel) | — | **U** | T | T | T | — | — |
-| 15-23 (Available) | **U** | — | — | — | — | — | — |
-| 24 (Mgmt Laptop) | **U** | — | — | — | — | — | — |
-| 25 (NetGear SFP) | — | — | — | — | — | **U** | — |
-| 26 (DEAD) | — | — | — | — | — | — | — |
+| Port | VLAN 1 | VLAN 10 | VLAN 11 | VLAN 20 | VLAN 21 | VLAN 250 |
+|------|--------|---------|---------|---------|---------|----------|
+| 1 (Router) | **U** | T | T | T | T | T |
+| 2 (NAS01) | — | **U** | — | — | — | — |
+| 3 (Pi-hole 1) | — | **U** | — | — | — | — |
+| 4 (VM01) | — | **U** | — | — | — | — |
+| 5 (Pi-hole 2) | — | **U** | — | — | — | — |
+| 6 (Available) | **U** | — | — | — | — | — |
+| 7 (NAS01 iDRAC) | — | **U** | — | — | — | — |
+| 8-12 (Available) | **U** | — | — | — | — | — |
+| 13 (U6Basement) | — | **U** | T | T | T | — |
+| 14 (U6MainLevel) | — | **U** | T | T | T | — |
+| 15-23 (Available) | **U** | — | — | — | — | — |
+| 24 (Mgmt Laptop) | **U** | — | — | — | — | — |
+| 25 (NetGear SFP) | **U** | — | — | — | — | T |
+| 26 (DEAD) | — | — | — | — | — | — |
 
 U = Untagged (native), T = Tagged, — = Not a member
 
@@ -120,7 +120,6 @@ Note that the Aruba 2530 web UI calls this "VLAN Management". Navigation paths u
 | 11 | WiFi_Secure |
 | 20 | Guest |
 | 21 | HomeAuto |
-| 30 | Cailin |
 | 250 | DMZ |
 
 ### Step 2: Configure Port 1 — Router Trunk (all VLANs)
@@ -138,7 +137,6 @@ For Port 1, set:
 | 11 | Tagged |
 | 20 | Tagged |
 | 21 | Tagged |
-| 30 | Tagged |
 | 250 | Tagged |
 
 ### Step 3: Configure Ports 2, 3, 4, 5 — Server Access (VLAN 10)
@@ -166,28 +164,24 @@ For each AP port, VLAN 10 native + tagged 11, 20, 21:
 
 VLAN 250 is a router-managed DMZ. Add it to the Port 1 trunk (already included in Step 2 above). No dedicated access port is assigned yet — add ports as DMZ devices are connected.
 
-### Step 6: Configure VLAN 30 (Cailin) on Port 1
-
-VLAN 30 is routed through the Protectli (em1 trunk). Add it to Port 1:
-
-| VLAN | Port 1 Setting |
-|------|---------------|
-| 30 | Tagged |
-
-### Step 7: Configure Port 24 — Management Laptop (VLAN 1 access)
+### Step 6: Configure Port 24 — Management Laptop (VLAN 1 access)
 
 Port 24 stays on default VLAN 1 Untagged — no change needed (default).
 
-### Step 8: Configure Port 25 (SFP) — NetGear GS310TP Trunk (Native VLAN 30)
+### Step 7: Configure Port 25 (SFP) — NetGear GS310TP Trunk (Native VLAN 1, Tagged 250)
+
+Port 25 stays on default VLAN 1 Untagged (no change needed) and additionally carries
+VLAN 250 (DMZ) tagged:
 
 | VLAN | Port 25 |
 |------|---------|
-| 1 | No |
-| 30 | Untagged |
+| 250 | Tagged |
 
-> Port 25 trunks to the NetGear GS310TP via SFP. VLAN 30 (Cailin) is the native VLAN. VLAN 254 (old modem bypass DMZ) has been removed — the T3200 now connects directly to the router's em0 WAN port.
+> Port 25 trunks to the NetGear GS310TP via SFP. VLAN 1 is the native VLAN (VLAN 30,
+> formerly native here, was decommissioned 2026-10-01). VLAN 254 (old modem bypass DMZ)
+> was removed earlier — the T3200 now connects directly to the router's em0 WAN port.
 
-### Step 9: Port 26 (SFP) — DEAD
+### Step 8: Port 26 (SFP) — DEAD
 
 Port 26 SFP is non-functional (hardware failure). Leave unconfigured / disabled.
 
@@ -207,8 +201,6 @@ vlan 20
   name "Guest"
 vlan 21
   name "HomeAuto"
-vlan 30
-  name "Cailin"
 vlan 250
   name "DMZ"
 
@@ -218,7 +210,6 @@ vlan 10 tagged 1
 vlan 11 tagged 1
 vlan 20 tagged 1
 vlan 21 tagged 1
-vlan 30 tagged 1
 vlan 250 tagged 1
 
 # Ports 2,3,4,5 — Server access (VLAN 10)
@@ -232,9 +223,8 @@ vlan 11 tagged 13-14
 vlan 20 tagged 13-14
 vlan 21 tagged 13-14
 
-# Port 25 (SFP) — NetGear GS310TP trunk (native VLAN 30)
-no vlan 1 untagged 25
-vlan 30 untagged 25
+# Port 25 (SFP) — NetGear GS310TP trunk (native VLAN 1, tagged 250)
+vlan 250 tagged 25
 
 # Port 26 (SFP) — DEAD (hardware failure, leave unconfigured)
 
@@ -281,8 +271,7 @@ Expected VLAN summary:
 | 11 | WiFi_Secure | — | 1, 13, 14 |
 | 20 | Guest | — | 1, 13, 14 |
 | 21 | HomeAuto | — | 1, 13, 14 |
-| 30 | Cailin | 25 | 1 |
-| 250 | DMZ | — | 1 |
+| 250 | DMZ | — | 1, 25 |
 
 ---
 
@@ -320,10 +309,14 @@ The NetGear is connected via a single SFP uplink on Aruba Port 25. Port 26 is de
 
 | Aruba Port | VLAN | Mode | Network |
 |------------|------|------|---------|
-| 25 (SFP-1) | 30 | Native (untagged) | Cailin (192.168.30.0/24) |
+| 25 (SFP-1) | 1 | Native (untagged) | MGMT (192.168.1.0/24) |
+| 25 (SFP-1) | 250 | Tagged | DMZ (192.168.250.0/24) |
 | 26 (SFP-2) | — | DEAD | — |
 
-VLAN 30 (Cailin) passes untagged — no special NetGear config required for that VLAN. VLAN 254 (old modem bypass DMZ) has been removed from this trunk; the T3200 modem now connects directly to the router's em0 WAN port.
+VLAN 30 (Cailin), formerly native/untagged on this trunk, was decommissioned
+2026-10-01 — the trunk now just passes VLAN 1 untagged and VLAN 250 (DMZ) tagged.
+VLAN 254 (old modem bypass DMZ) was removed earlier; the T3200 modem now connects
+directly to the router's em0 WAN port.
 
 > Note: If using an SFP-to-RJ45 adapter, ensure compatibility with the Aruba 2530.
 
