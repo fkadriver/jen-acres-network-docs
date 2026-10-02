@@ -17,14 +17,12 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 | 192.168.11.0/24 | WIFI_SECURE | em1 (VLAN 11 trunk) | Wireless Secured | Secure_Net | Enabled | Router: .1 |
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20 trunk) | Guest Access | Unsecure_Net | Enabled | Router: .1 |
 | 192.168.21.0/24 | HomeAssist | em1 (VLAN 21 trunk) | Home Automation/IoT | Unsecure_Net | Enabled | Router: .1 |
+| 192.168.30.0/24 | Cailin | em1 (VLAN 30 trunk) | Personal (Cailin) | Unsecure_Net | Enabled | Router: .1 |
 | 192.168.250.0/24 | DMZ | em1 (VLAN 250 trunk) | Isolated internet-only, routed through OPNsense | — | Router: .1 | Enabled |
-
-> VLAN 30 (Cailin, formerly "Boys") was decommissioned 2026-10-01 on both the switch
-> and OPNsense — part of rethinking the network as Starlink becomes primary WAN.
 
 **Supernet Aliases (for simplified firewall rules):**
 - **Secure_Net**: 192.168.0.0/20 (MGMT, SERVERS, WIFI_SECURE)
-- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist)
+- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist, Cailin)
 
 - **WAN (primary)**: 192.168.254.0/24 (DHCP from 192.168.254.254, ISP: Kinetic)
 - **WAN (secondary)**: Starlink V5, DHCP/CGNAT on em2 (opt9) — 50/50 load-balanced against
@@ -48,7 +46,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
   - Port 7: NAS01 iDRAC (Dell T330, VLAN 10)
   - Ports 13-14: UniFi APs (PoE+, trunk VLANs 10/11/20/21)
   - Port 24: Management Laptop (VLAN 1)
-  - Port 25 (SFP): NetGear GS310TP trunk (Native VLAN 1, Tagged VLAN 250)
+  - Port 25 (SFP): NetGear GS310TP trunk (Native VLAN 30)
 - **WiFi**: 2x Ubiquiti UniFi U6-Pro (802.11ax, PoE+ powered via switch)
   - U6Basement (192.168.10.61, port 13), U6MainLevel (192.168.10.60, port 14)
   - Managed via UniFi Controller on vm01 (192.168.10.21)

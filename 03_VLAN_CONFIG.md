@@ -4,7 +4,7 @@
 
 **Supernet Architecture:**
 - **Secure_Net**: 192.168.0.0/20 (MGMT, SERVERS, WIFI_SECURE)
-- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist)
+- **Unsecure_Net**: 192.168.16.0/20 (GUEST, HomeAssist, Cailin)
 
 **Key Design Feature**: All VLANs trunk through em1 on the Protectli to the Aruba switch. em3 is a dedicated, isolated break-glass port. em2 carries the Starlink secondary WAN (see [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)) — not a VLAN.
 - **em1** → Aruba 2530-24G switch (single trunk, all VLANs)
@@ -18,18 +18,13 @@
 | 192.168.11.0/24 | WIFI_SECURE | em1 (VLAN 11) | Wireless Secured | Secure_Net | 192.168.11.1 | 11.100-11.250 |
 | 192.168.20.0/24 | GUEST | em1 (VLAN 20) | Guest Access | Unsecure_Net | 192.168.20.1 | 20.100-20.250 |
 | 192.168.21.0/24 | HomeAssist | em1 (VLAN 21) | HomeAssist/IoT | Unsecure_Net | 192.168.21.1 | 21.100-21.250 |
+| 192.168.30.0/24 | Cailin | em1 (VLAN 30) | Personal (Cailin) | Unsecure_Net | 192.168.30.1 | 30.100-30.250 |
 | 192.168.250.0/24 | DMZ | em1 (VLAN 250) | DMZ — router-managed, internet DNS, no internal access | — | 192.168.250.1 | 250.100-250.250 |
 | 192.168.99.0/29 | MGMT_Only | em3 (isolated) | Break-glass emergency | — | 192.168.99.1 | 99.2-99.6 |
 
 > Note: `192.168.254.0/24` is the **WAN-side** subnet Kinetic's modem hands to `em0`
 > (see [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)) — it is unrelated to DMZ
 > despite an older version of this doc set conflating the two.
-
-> **VLAN 30 (Cailin, formerly "Boys") was decommissioned 2026-10-01** — removed from
-> both the switch and OPNsense (interface, VLAN definition, DHCP range, firewall
-> rules). Scott is rethinking this network's purpose entirely as part of the move to
-> Starlink as primary WAN, rather than keeping it around unchanged. If it comes back,
-> it'll likely look different from what's described in the sections below.
 
 ## Physical Topology
 
@@ -73,7 +68,7 @@
     │ Port 14: U6MainLevel PoE+(VLAN 10+11+20+21)        │
     │ Port 23: Available     —                            │
     │ Port 24: Mgmt Laptop   (VLAN 1)                    │
-    │ Port 25: NetGear (SFP) (VLAN 1 native)             │
+    │ Port 25: NetGear (SFP) (VLAN 30 native)            │
     └─────────────────────────────────────────────────────┘
 ```
 
@@ -118,13 +113,19 @@ Create VLANs for all tagged networks. **Use `em1` as the parent interface**.
 - **Description**: HomeAssist
 - Click **Save**
 
+### VLAN 30 - Cailin
+- **Parent Interface**: em1
+- **VLAN tag**: 30
+- **Description**: Cailin
+- Click **Save**
+
 ### VLAN 250 - DMZ
 - **Parent Interface**: em1
 - **VLAN tag**: 250
 - **Description**: DMZ
 - Click **Save**
 
-**Verify**: You should see 5 VLANs listed: `em1_vlan10`, `em1_vlan11`, `em1_vlan20`, `em1_vlan21`, `em1_vlan250`
+**Verify**: You should see 6 VLANs listed: `em1_vlan10`, `em1_vlan11`, `em1_vlan20`, `em1_vlan21`, `em1_vlan30`, `em1_vlan250`
 
 ---
 
@@ -174,6 +175,7 @@ already done in [01_OPNSENSE_INSTALLATION.md](01_OPNSENSE_INSTALLATION.md)).
 | [Tailscale] | opt4     | tailscale0 (Tailscale VPN) |
 | [HomeAssist] | opt5    | em1 VLAN 21 (HomeAssist) |
 | [MGMT_Only] | opt6     | em3 — Break-glass *(configured in 01_OPNSENSE_INSTALLATION.md)* |
+| [Cailin]  | opt7       | em1 VLAN 30 (Cailin) |
 | [DMZ]     | opt8       | em1 VLAN 250 (DMZ) |
 | [STARLINK] | opt9      | em2 (Starlink secondary WAN — see [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)) |
 
@@ -222,6 +224,12 @@ Click **Save** → **Apply Changes**
 - **Description**: HomeAssist
 - **IPv4 address**: 192.168.21.1 / 24
 
+### Cailin (VLAN 30)
+
+- **Enable**: ✓
+- **Description**: Cailin
+- **IPv4 address**: 192.168.30.1 / 24
+
 ### DMZ (VLAN 250)
 
 - **Enable**: ✓
@@ -268,6 +276,9 @@ Click **Save** → **Apply**
 
 #### HomeAssist (VLAN 21)
 - **Interface**: HomeAssist | **Start**: 192.168.21.100 | **End**: 192.168.21.250 | **Lease**: 86400
+
+#### Cailin (VLAN 30)
+- **Interface**: Cailin | **Start**: 192.168.30.100 | **End**: 192.168.30.250 | **Lease**: 86400
 
 #### DMZ (VLAN 250)
 - **Interface**: DMZ | **Start**: 192.168.250.100 | **End**: 192.168.250.250 | **Lease**: 3600
@@ -358,12 +369,13 @@ ping 192.168.10.1   # SERVERS
 ping 192.168.11.1   # WIFI_SECURE
 ping 192.168.20.1   # GUEST
 ping 192.168.21.1   # HomeAssist
+ping 192.168.30.1   # Cailin
 ping 192.168.250.1  # DMZ
 ```
 
 ### 3. Verify VLAN Interfaces
 
-Check that all VLAN interfaces appear under Interfaces → Overview and show Status: up with the correct IPv4 addresses. You should see em1_vlan10, em1_vlan11, em1_vlan20, em1_vlan21, em1_vlan250 in addition to LAN (em1) and WAN (em0).
+Check that all VLAN interfaces appear under Interfaces → Overview and show Status: up with the correct IPv4 addresses. You should see em1_vlan10, em1_vlan11, em1_vlan20, em1_vlan21, em1_vlan30, em1_vlan250 in addition to LAN (em1) and WAN (em0).
 
 ### 4. Monitor Traffic
 

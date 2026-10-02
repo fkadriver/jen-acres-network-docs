@@ -55,14 +55,14 @@ every internal subnet without any manual NAT rule needed.
 ## Policy Routing (which traffic is balanced)
 
 The gateway group only affects traffic whose firewall rule explicitly sets
-**Gateway = `WAN_BALANCE`**. Five client-network "allow to any" rules carry this
-(originally six — Cailin/opt7 was decommissioned 2026-10-01):
+**Gateway = `WAN_BALANCE`**. Six client-network "allow to any" rules carry this:
 
 - LAN (MGMT_LAN)
 - WiFI_Secure (opt1)
 - GUEST (opt2)
 - SERVERS (opt3)
 - HomeAssist (opt5)
+- Cailin (opt7)
 
 See [05_FIREWALL_RULES.md](05_FIREWALL_RULES.md) for the per-interface rule context.
 
