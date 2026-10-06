@@ -85,6 +85,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 8. **Security hardening** → [docs/08_SECURITY_HARDENING.md](docs/08_SECURITY_HARDENING.md)
 9. **nfSensei migration (future)** → [docs/09_NFSENSEI_MIGRATION.md](docs/09_NFSENSEI_MIGRATION.md)
 10. **Starlink multi-WAN** → [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md)
+11. **Closet cooling (planned)** → [docs/11_CLOSET_COOLING.md](docs/11_CLOSET_COOLING.md)
 
 ## Repository Structure
 
@@ -102,6 +103,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 │   ├── 08_SECURITY_HARDENING.md           # Security hardening (users, SSH, 2FA)
 │   ├── 09_NFSENSEI_MIGRATION.md           # nfSensei migration tracking (future)
 │   ├── 10_STARLINK_MULTIWAN.md            # Starlink multi-WAN load balancing (em2)
+│   ├── 11_CLOSET_COOLING.md               # Server closet HVAC return tap + HA fan automation (planned)
 │   └── TROUBLESHOOTING.md                 # Consolidated troubleshooting guide
 ├── tailnet/                               # Tailscale ACL policy (git submodule)
 │   ├── policy.hujson                      # Tailscale ACL configuration
