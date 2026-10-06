@@ -85,6 +85,51 @@ This pulls makeup air across and up through the full equipment run — both the 
 and the vertical rise of the rack — before it exits into the return, rather than
 short-circuiting near one end.
 
+## Electrical: Dedicated 20A Circuit
+
+Blocking prerequisite — nothing else in this project gets powered until this is in.
+One circuit covers the fan plus the existing rack load (NAS/switch/router/UPS, well
+under 20A @ 120V's 1920W continuous rating at 80% derate).
+
+**Check local code/AHJ before starting** — specifically whether a permit/inspection is
+required and whether AFCI protection applies to this room/circuit (many jurisdictions
+following 2020+ NEC require AFCI for bedroom-area circuits, which a closet off a
+bedroom likely counts as). If in doubt, or not comfortable working in the panel, hire a
+licensed electrician — this doc assumes DIY only to the extent local code allows it.
+
+1. **Plan the run.** Panel → closet. The ceiling joist bay above the closet is already
+   open (see Site Survey) — convenient for fishing cable if the panel is reachable
+   through the same floor/joist system.
+2. **Confirm panel capacity** — open slot for one new single-pole 20A breaker, and
+   headroom in the panel's overall load calc.
+3. **Kill power and verify dead** before any panel work — shut off main (or the
+   relevant area), confirm with a non-contact tester *and* a multimeter across the
+   breaker terminals before touching anything.
+4. **Run 12/2 NM-B (Romex)** from the panel to the closet — 12 AWG is required for a
+   20A circuit (14 AWG is only rated for 15A). Secure per code: stapled within 12" of
+   every box, supported every 4.5 ft along the run, and nail-plated wherever it passes
+   through a joist/stud within 1.25" of the edge (relevant here given the Romex and
+   ducting already sharing that joist bay — keep the new run clear of both).
+5. **Install the breaker** — single-pole 20A, AFCI/combination type if required by
+   local code for this circuit location. Label it clearly in the panel directory (e.g.
+   "Server Closet — 20A").
+6. **Set the box and receptacle** at the planned closet location — a 20A-rated duplex
+   receptacle (NEMA 5-20R, the T-slot style), properly grounded.
+7. **Terminate and test** — land conductors at the breaker and neutral/ground bars,
+   restore power, verify ~120V at the receptacle with a multimeter, then check wiring
+   correctness and ground with a standard outlet tester. Test the AFCI button if
+   applicable.
+
+### Materials
+
+| Item | Spec |
+|---|---|
+| Cable | 12/2 NM-B (Romex), length = panel-to-closet run |
+| Breaker | Single-pole 20A (AFCI/combo if required locally) |
+| Receptacle | 20A duplex, NEMA 5-20R (T-slot) |
+| Box | Standard single-gang, sized for the receptacle + 12 AWG fill |
+| Fasteners | Cable staples, nail plates for any joist/stud crossings |
+
 ## Parts List
 
 ### Makeup Air / Wall Transfer Vent
@@ -146,8 +191,8 @@ HA Green has no built-in radio.
 
 ## Outstanding / TODO
 
-- [ ] **Dedicated 20A circuit/outlet in the closet** (blocking — needed before
-      mounting the fan, and ideally sized for the existing rack load too)
+- [ ] **Dedicated 20A circuit/outlet in the closet** (blocking — see Electrical
+      section above for steps)
 - [ ] **Cut wall transfer vent behind nas01** (bottom-left, into bedroom) — required
       for the return tap to work at all; door is solid, so this is the makeup-air path
 - [ ] Identify the second flex duct in the joist bay before cutting near it
