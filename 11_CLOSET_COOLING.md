@@ -144,28 +144,33 @@ licensed electrician — this doc assumes DIY only to the extent local code allo
 ### Fan
 
 Dedicated inline duct fan, run at fixed speed off a plain switched outlet — Home
-Assistant handles the on/off thermostat logic, not the fan's own controller.
+Assistant handles the on/off thermostat logic, not the fan's own controller (so there's
+no "runs quieter at low speed" benefit to oversizing — it's full speed whenever it's
+on).
 
-- **AC Infinity CLOUDLINE S6** (6", ~165 CFM, ~$55) — quiet at low speed, sized with
-  headroom over the actual load (~100–150 CFM needed). Buy the standalone fan, not the
+**4", not 6".** CFM math: at the high end of the heat estimate (~450W / 1536 BTU/hr)
+and a 15°F rise, required airflow is ~95 CFM. A 4" fan rated ~100 CFM free-air covers
+that with margin, since this is a short, low-resistance tap rather than a long duct
+run. 6" buys no real benefit here and means a bigger, less necessary hole in the flat
+sheet metal pan at the return tap.
+
+- **AC Infinity CLOUDLINE S4** (4", ~100 CFM, ~$45) — buy the standalone fan, not the
   kit with AC Infinity's UIS speed controller.
 - Budget alternative: iPower or TerraBloom 4" inline duct fan (~$30) — basic fixed-speed
   AC fan, no controller required.
+- **Mounting**: the return tap lands on a flat sheet-metal pan, not round duct — cut a
+  round hole sized to a standard 4" sheet-metal starting collar/boot, screw the collar
+  flange to the pan, seal the edge (mastic/foil tape), then mount the fan to the
+  collar.
 
 ### Power
 
-- **Fan**: Zigbee smart plug, ideally energy-monitoring (confirms the fan is actually
-  drawing current — a stalled motor shows up as 0W instead of failing silently).
-  SONOFF S40 Lite (Zigbee) or Third Reality Smart Plug, ~$12–15.
-- **Switch / OPNsense box**: fine to put on a switchable Zigbee plug for remote
-  power-cycle capability — low risk.
-- **NAS — do not put on a switchable smart plug.** Accidental automation or dashboard
-  mis-tap cutting power risks filesystem corruption. Prefer the native Synology/QNAP
-  integration for wattage/health visibility, or a monitor-only (non-switching)
-  energy-sensing plug if the NAS doesn't expose it natively.
-- **UPS — not a smart plug either.** Use Network UPS Tools (NUT) — HA add-on or a small
-  box talking to the UPS over USB — for battery %, load wattage, runtime, and a clean
-  "on battery" signal/shutdown trigger.
+Smart plugs/relays already on hand — **just need the physical 20A outlet installed**
+(see Electrical section above).
+
+- NAS and UPS: not on switchable smart plugs (accidental cutoff risks filesystem
+  corruption) — NAS via native Synology/QNAP integration, UPS via NUT.
+- Fan and switch/OPNsense box: fine on switchable Zigbee plugs.
 
 ### Sensor / "Thermostat"
 
