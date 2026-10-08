@@ -63,10 +63,10 @@ This **replaces the earlier RUTX50 plan**. Researched and confirmed:
 
 </details>
 
+Signal strength at the house confirmed acceptable (2026-10-08).
+
 **Still to confirm:** whether the $10/mo voice-line discount applies automatically
 to Scott's existing T-Mobile account/line, or requires a separate sign-up step.
-Also confirm signal strength at the house before committing (fallback: Verizon/AT&T
-if T-Mobile signal is weak there).
 
 ## OPNsense changes required (not yet implemented)
 
@@ -100,8 +100,8 @@ This is a restructuring of the existing Starlink multi-WAN setup
 
 ## Open questions / next steps
 
-- [ ] Test T-Mobile cellular signal strength at the house — confirm before signing
-      up (fallback to Verizon/AT&T-based option if weak).
+- [x] Test T-Mobile cellular signal strength at the house — confirmed acceptable
+      (2026-10-08).
 - [ ] Sign up for T-Mobile Home Internet Backup; confirm $10/mo (not $20/mo)
       applies to Scott's existing account/line.
 - [ ] Cancel Kinetic/Windstream — confirm no contract/ETF penalty first.
