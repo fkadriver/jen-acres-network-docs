@@ -14,7 +14,7 @@ hardware specs in `~/git/nixos` and the switch config doc, not guesses. Pairs wi
 | log01 | Shuttle Zingbox, Celeron (Jasper Lake-class) | ~10–15W |
 | Aruba 2530-24G switch + 2× UniFi U6-Pro APs | Switch baseline + 42W of 195W PoE budget actually used (see [04_SWITCH_CONFIG.md](04_SWITCH_CONFIG.md)) | ~70–85W |
 | sands-bak01 | HP ProDesk 600 G4 Desktop Mini | ~15–25W |
-| 15" Compaq monitor | unconfirmed, LCD assumed | ~20–30W — **check the label**; if it's actually a CRT this is more like 60–90W |
+| 15" Compaq monitor | LCD, confirmed | ~20–30W |
 | pihole01 + pihole02 | 2× Raspberry Pi 3B | ~5W each, ~10W total |
 
 **Typical running total: ~205–255W** (nas01 now measured rather than estimated).
@@ -59,7 +59,7 @@ homelab-community gold standard for USB/NUT monitoring.
 ## Outstanding / TODO
 
 - [x] Pull nas01's live power draw from iDRAC — 70W measured, 2026-10-07
-- [ ] Confirm whether the 15" Compaq monitor is LCD or CRT (affects the budget)
+- [x] Confirm whether the 15" Compaq monitor is LCD or CRT — confirmed LCD
 - [ ] Purchase UPS (CyberPower CP1500PFCLCD or APC Smart-UPS SMC1500/SMT1500)
 - [ ] Wire into the new 20A circuit (see [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md))
 - [ ] Set up NUT (HA add-on or small host) talking to the UPS over USB
