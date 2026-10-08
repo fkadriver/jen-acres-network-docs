@@ -1,11 +1,13 @@
 # Cellular Backup WAN (Planned)
 
 Tracking the plan to drop Kinetic/Windstream entirely, promote Starlink to sole
-primary WAN, and add a cellular router as pure failover backup.
+primary WAN, and add T-Mobile Home Internet Backup (cellular) as pure failover
+backup.
 
 ## Status
 
-**Planning — no hardware purchased yet.** Research done 2026-10-08; see decision
+**Planning — nothing purchased/signed up yet.** Research done 2026-10-08, revised
+same day after confirming how T-Mobile's gateway actually works; see decision
 summary below. Depends on [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md), which
 is implemented and currently runs Starlink load-balanced 50/50 against Kinetic.
 
@@ -14,45 +16,67 @@ is implemented and currently runs Starlink load-balanced 50/50 against Kinetic.
 - Cancel Kinetic/Windstream (DSL, `em0`, see
   [research/T3200_bridge_mode.md](../research/T3200_bridge_mode.md)).
 - Starlink becomes the sole primary WAN (`opt9`/`em2`), not balanced against anything.
-- A cellular router provides automatic failover only — idle until Starlink drops,
-  not sharing load day-to-day.
+- T-Mobile Home Internet Backup provides automatic failover only, via OPNsense's
+  own gateway-group logic — idle until Starlink drops, not sharing load day-to-day.
 
-## Hardware decision
+## Hardware & plan decision (revised 2026-10-08)
 
-Same pattern already proven with the Kinetic T3200: put the ISP-side device into
-bridge/IP-passthrough mode and hand OPNsense a clean single IP on its own interface.
-Cellular backup uses the identical shape — a dedicated cellular router in
-passthrough mode, one Ethernet cable into OPNsense on whichever physical port
-`em0` vacates once Kinetic is cut. No new ports needed on the Protectli.
+**Decision: T-Mobile Home Internet Backup**, using T-Mobile's own included gateway
+directly — no third-party cellular router. Scott is already a T-Mobile customer, so
+this should land at **$10/mo** (vs. $20/mo standalone), with 100 hrs/mo (130GB)
+uncapped 5G.
+
+This **replaces the earlier RUTX50 plan**. Researched and confirmed:
+
+- **The T-Mobile gateway has no Ethernet WAN-in port — it's LAN-out only**, like a
+  basic cellular modem. It cannot take Starlink as an input and fail over on its
+  own; it isn't designed to sit "in front of" another connection.
+- **It also has no bridge/IP-passthrough mode** — unlike the Kinetic T3200 pattern
+  this doc originally assumed. It's SIM-locked to T-Mobile's own hardware too, so a
+  third-party router (RUTX50 or otherwise) can't use the T-Mobile SIM anyway.
+- **Conclusion: all failover logic must live in OPNsense**, not in the cellular
+  gateway. This is actually the simpler outcome — it's exactly the Tier1/Tier2
+  gateway-group design already planned below, just with the T-Mobile gateway's LAN
+  port plugged into OPNsense's `CELLULAR` interface instead of a passthrough-mode
+  RUTX50.
+- **Accept double-NAT** on the cellular path: T-Mobile gateway NATs, then OPNsense
+  NATs again behind it. Fine for an idle, outbound-only failover link (no inbound
+  hosting over cellular). OPNsense's `CELLULAR` interface will get a private DHCP
+  address from the T-Mobile gateway — apply the same "uncheck block private/bogon
+  networks" fix already used for Starlink's CGNAT'd `opt9`.
+- This also **eliminates the RUTX50 purchase** (~$300-350 saved); the earlier
+  hardware comparison table (RUTX50, Peplink, GL.iNet, ConnecTen, etc.) is now
+  moot for this plan and kept below only for reference should T-Mobile Home
+  Internet Backup fall through (e.g. poor signal at the house).
+
+<details>
+<summary>Superseded hardware comparison (own-router + passthrough approach)</summary>
 
 | Device | Price | Verdict |
 |---|---|---|
-| **Teltonika RUTX50** | ~$300–350 | **Leading candidate.** Dual-SIM 5G, clean passthrough-to-WAN mode, widely used for Starlink+cellular failover specifically. |
-| Peplink MAX BR1 Mini/Pro 5G, B One 5G | ~$500+ | More polished, adds SpeedFusion bonding (combine rather than just fail over) — likely more than needed for pure backup. |
-| GL.iNet Spitz AX (GL-X3000) | ~$170–200 | Cheapest, OpenWrt-based, but forum reports (as of research date) describe bridge/passthrough mode as experimental with no release timeline — risk, not a pick until that matures. |
-| USB/mini-PCIe LTE modem in the Protectli itself | varies | Protectli's own backup-WAN guidance targets their Vault line (mini-PCIe slot for an internal modem); the FW41 doesn't have that slot. Not applicable to this hardware. |
-| ConnecTen (connecteninternet.com) | $99 hardware + $100/mo unlimited, or $20/day then $11/day | Bundled router+SIM+plan, MiFi/travel-hotspot oriented, not bring-your-own-hardware. No evidence the router supports bridge/IP-passthrough mode, which this architecture requires. Unlimited plan is ~4-5x the cost of the T-Mobile/own-SIM options below. Ruled out unless a passthrough-capable, SIM-only option from them turns up. |
+| Teltonika RUTX50 | ~$300–350 | Was leading candidate for a passthrough-mode router approach. No longer needed — T-Mobile's SIM won't work in it anyway. |
+| Peplink MAX BR1 Mini/Pro 5G, B One 5G | ~$500+ | More polished, adds SpeedFusion bonding — likely more than needed for pure backup. |
+| GL.iNet Spitz AX (GL-X3000) | ~$170–200 | Cheapest, OpenWrt-based, but bridge/passthrough mode reported experimental. |
+| USB/mini-PCIe LTE modem in the Protectli itself | varies | Protectli's backup-WAN guidance targets their Vault line; the FW41 doesn't have that slot. |
+| ConnecTen (connecteninternet.com) | $99 hardware + $100/mo unlimited, or $20/day then $11/day | Bundled router+SIM+plan, MiFi/travel-hotspot oriented. No evidence of passthrough support; ~4-5x the cost of T-Mobile Home Internet Backup. |
+| Own SIM in a third-party router (Visible, Tello, Boost, etc.) | ~$25/mo | More carrier flexibility, but moot without a passthrough-capable router in the mix. |
 
-**Decision: Teltonika RUTX50**, pending final purchase.
+</details>
 
-## Data plan options
-
-| Plan | Cost | Notes |
-|---|---|---|
-| T-Mobile Home Internet Backup | $20/mo standalone ($10/mo with a T-Mobile voice line) | Dedicated backup plan, 100 hrs/mo uncapped 5G, auto-switching gateway included. Cheapest dedicated option. |
-| Own SIM in the RUTX50 (Visible, Tello, Boost, etc.) | ~$25/mo | More carrier flexibility — pick whichever has the best signal at the house; RUTX50's dual-SIM slot also allows a second carrier for redundancy. |
-
-No plan selected yet — depends on signal testing at the house once hardware arrives.
+**Still to confirm:** whether the $10/mo voice-line discount applies automatically
+to Scott's existing T-Mobile account/line, or requires a separate sign-up step.
+Also confirm signal strength at the house before committing (fallback: Verizon/AT&T
+if T-Mobile signal is weak there).
 
 ## OPNsense changes required (not yet implemented)
 
 This is a restructuring of the existing Starlink multi-WAN setup
 ([10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)), not just an addition:
 
-- **Retire `em0` as Kinetic WAN**, repurpose as `CELLULAR` interface once the RUTX50
-  is wired in. Check whether the carrier hands back a public or CGNAT address —
-  if CGNAT, same "uncheck block private/bogon networks" gotcha documented for
-  Starlink's `opt9` may apply.
+- **Retire `em0` as Kinetic WAN**, repurpose as `CELLULAR` interface once the
+  T-Mobile gateway's LAN port is wired in. It will hand back a private DHCP
+  address (double-NAT, confirmed above) — apply the same "uncheck block
+  private/bogon networks" gotcha documented for Starlink's `opt9`.
 - **New gateway `CELLULAR_DHCP`** — monitor IP TBD (pick something the carrier
   doesn't filter; Kinetic's ICMP-filtering surprise on `WAN_DHCP` is the
   cautionary example here).
@@ -76,11 +100,13 @@ This is a restructuring of the existing Starlink multi-WAN setup
 
 ## Open questions / next steps
 
-- [ ] Purchase RUTX50 (or revisit if a better option surfaces before buying).
-- [ ] Test cellular signal strength at the house for T-Mobile/Verizon/AT&T before
-      picking a data plan or carrier.
+- [ ] Test T-Mobile cellular signal strength at the house — confirm before signing
+      up (fallback to Verizon/AT&T-based option if weak).
+- [ ] Sign up for T-Mobile Home Internet Backup; confirm $10/mo (not $20/mo)
+      applies to Scott's existing account/line.
 - [ ] Cancel Kinetic/Windstream — confirm no contract/ETF penalty first.
-- [ ] Wire RUTX50 into freed `em0`, configure passthrough mode.
+- [ ] Wire T-Mobile gateway's LAN port into freed `em0` (no passthrough config —
+      it's a standalone double-NAT device; see decision above).
 - [ ] Rebuild OPNsense gateway/group config per above.
 - [ ] Decide on `gw_switch_default` fix for router's own traffic.
 - [ ] Live failover test (pull Starlink, confirm cellular picks up) — same
