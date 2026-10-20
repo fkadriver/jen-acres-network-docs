@@ -1,11 +1,11 @@
 # Starlink WAN (Sole Connection)
 
 **Status: Starlink-only, updated 2026-10-20.** Kinetic has been turned off. A T-Mobile
-cellular backup is planned to go in **inline with Starlink** (not as a second,
-independently-routed WAN like Kinetic was) but isn't cabled yet. Starlink
-(`em2`/`opt9`) is the sole internet connection for now — the 50/50 load-balancing
-setup documented below (implemented 2026-09-30) was removed the same day Kinetic went
-off, since balancing against a dead link made no sense.
+Home Internet Backup cellular connection is planned as a Tier2 failover (see
+[13_CELLULAR_BACKUP_WAN.md](13_CELLULAR_BACKUP_WAN.md)) but isn't cabled/signed up
+yet. Starlink (`em2`/`opt9`) is the sole internet connection for now — the 50/50
+load-balancing setup documented below (implemented 2026-09-30) was removed the same
+day Kinetic went off, since balancing against a dead link made no sense.
 
 ## Current configuration
 
@@ -16,15 +16,16 @@ off, since balancing against a dead link made no sense.
   explicit `Gateway` field anymore — removed along with the gateway group, so they
   fall through to the system default (Starlink). See
   [05_FIREWALL_RULES.md](05_FIREWALL_RULES.md).
-- **`WAN_BALANCE` gateway group**: deleted. If multi-WAN comes back (e.g., once
-  T-Mobile is cabled and if it ends up being a true independent second WAN rather
-  than an inline failover device), it'll need to be recreated — see "Prior setup"
-  below for the exact mechanics that worked.
-- **Kinetic (`WAN_DHCP`, `em0`)**: gateway definition and interface config left in
-  place, just unused (`defaultgw` off) — easy to re-enable if Kinetic ever comes back.
-  Its monitor (Kinetic's own modem, `192.168.254.254` — see "Prior setup" for why a
-  public IP doesn't work as a monitor target) will simply show down with no cable
-  connected.
+- **`WAN_BALANCE` gateway group**: deleted. Per the plan in
+  [13_CELLULAR_BACKUP_WAN.md](13_CELLULAR_BACKUP_WAN.md), it won't be recreated in
+  this shape — the next multi-WAN group will be a Tier1(Starlink)/Tier2(cellular)
+  *failover* group, not a 50/50 balance.
+- **Kinetic (`WAN_DHCP`, `em0`)**: gateway definition and interface config currently
+  left in place, unused (`defaultgw` off). Per the cellular backup plan, `em0` is
+  slated to be **repurposed** as the `CELLULAR` interface (T-Mobile gateway's LAN
+  port wired in) rather than kept around for Kinetic, which isn't expected to come
+  back. `WAN_DHCP`'s old monitor target (Kinetic's own modem, `192.168.254.254` — see
+  "Prior setup" for why a public IP didn't work there) is moot once that happens.
 
 ## Starlink interface (`opt9` / `em2`)
 
@@ -46,13 +47,15 @@ from the Starlink router's own DHCP instead of a CGNAT address.
 
 ## T-Mobile backup (planned, not yet cabled)
 
-Scott's plan: a T-Mobile cellular connection goes in **inline with Starlink** rather
-than as an independent second WAN interface the way Kinetic was. The exact mechanics
-(an inline failover/bonding device sitting in the physical path, vs. something else)
-aren't settled yet since it isn't cabled. Revisit this doc once it's connected —
-it likely won't look like recreating the old `WAN_BALANCE` gateway-group setup
-verbatim, since "inline" suggests a different architecture than two independently
-routed OPNsense WAN interfaces.
+Full plan and research: [13_CELLULAR_BACKUP_WAN.md](13_CELLULAR_BACKUP_WAN.md).
+Short version: T-Mobile Home Internet Backup's gateway has **no bridge/passthrough
+mode** — it's a standalone double-NAT device, LAN-out only. It isn't sitting
+physically "inline" between Starlink and OPNsense; its LAN port wires into a
+repurposed `em0` (freed up now that Kinetic is off) as a new `CELLULAR` interface,
+and **all failover logic lives in OPNsense** as a Tier1 (Starlink) / Tier2
+(cellular) gateway group — failover only, never sharing load, unlike the old 50/50
+`WAN_BALANCE` setup. Not yet implemented; nothing purchased/signed up yet as of
+2026-10-08.
 
 ## Prior setup: Starlink + Kinetic load balancing (2026-09-30 to 2026-10-20)
 

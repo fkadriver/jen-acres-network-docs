@@ -26,8 +26,10 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 
 - **WAN**: Starlink V5, DHCP/CGNAT on em2 (opt9) — sole connection as of 2026-10-20.
   Kinetic (192.168.254.0/24, DHCP from 192.168.254.254) has been turned off; its
-  config is left in place but unused. A T-Mobile cellular backup is planned inline
-  with Starlink but not yet cabled. See [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md).
+  config is left in place but unused. A T-Mobile Home Internet Backup cellular
+  connection is planned as a Tier2 OPNsense failover gateway, not yet cabled/signed
+  up. See [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md) and
+  [docs/13_CELLULAR_BACKUP_WAN.md](docs/13_CELLULAR_BACKUP_WAN.md).
 
 ## Hardware
 
@@ -58,7 +60,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 ## Features
 
 - ✅ **Starlink WAN**: sole connection as of 2026-10-20 (Kinetic off); T-Mobile
-  cellular backup planned inline, not yet cabled
+  cellular backup planned as Tier2 failover, not yet cabled
 - ✅ **Network Segmentation**: 5 isolated networks via VLANs
 - ✅ **UniFi WiFi**: Centrally managed U6-Pro APs with multiple SSIDs
 - ✅ **Tailscale Integration**: Subnet router advertising `192.168.0.0/16`, ACLs managed via git

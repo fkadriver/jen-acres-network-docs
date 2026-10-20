@@ -8,8 +8,17 @@ backup.
 
 **Planning — nothing purchased/signed up yet.** Research done 2026-10-08, revised
 same day after confirming how T-Mobile's gateway actually works; see decision
-summary below. Depends on [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md), which
-is implemented and currently runs Starlink load-balanced 50/50 against Kinetic.
+summary below.
+
+**Update 2026-10-20: Kinetic has been turned off**, ahead of this plan's full
+implementation. The 50/50 `WAN_BALANCE` group this doc originally described as
+"currently running" has been removed — Starlink is now the sole WAN with no gateway
+group at all (see [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)), rather than
+the Tier1(Starlink)/Tier2(cellular) failover group this doc plans for below. That
+failover group still needs to be built once the T-Mobile gateway is actually wired
+in — removing the 50/50 group doesn't get ahead of that step, it just reflects that
+balancing against a now-dead Kinetic link stopped making sense before cellular was
+ready to take its place.
 
 ## Goal
 
@@ -73,7 +82,7 @@ to Scott's existing T-Mobile account/line, or requires a separate sign-up step.
 This is a restructuring of the existing Starlink multi-WAN setup
 ([10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)), not just an addition:
 
-- **Retire `em0` as Kinetic WAN**, repurpose as `CELLULAR` interface once the
+- **`em0` is freed up (Kinetic turned off 2026-10-20)** — repurpose as `CELLULAR` interface once the
   T-Mobile gateway's LAN port is wired in. It will hand back a private DHCP
   address (double-NAT, confirmed above) — apply the same "uncheck block
   private/bogon networks" gotcha documented for Starlink's `opt9`.
@@ -104,7 +113,7 @@ This is a restructuring of the existing Starlink multi-WAN setup
       (2026-10-08).
 - [ ] Sign up for T-Mobile Home Internet Backup; confirm $10/mo (not $20/mo)
       applies to Scott's existing account/line.
-- [ ] Cancel Kinetic/Windstream — confirm no contract/ETF penalty first.
+- [x] Kinetic/Windstream turned off (2026-10-20).
 - [ ] Wire T-Mobile gateway's LAN port into freed `em0` (no passthrough config —
       it's a standalone double-NAT device; see decision above).
 - [ ] Rebuild OPNsense gateway/group config per above.
