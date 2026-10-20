@@ -74,6 +74,12 @@ This **replaces the earlier RUTX50 plan**. Researched and confirmed:
 
 Signal strength at the house confirmed acceptable (2026-10-08).
 
+**Confirmed directly by Scott (2026-10-20):** connection runs through T-Mobile's
+gateway (he refers to it as the "4G router"); it only kicks in when the main
+connection (Starlink) is down — automatic failover only, never shares load, matching
+the Tier1/Tier2 plan below; capped at 100 hours/month, matching the 100 hrs/mo (130GB)
+figure above.
+
 **Still to confirm:** whether the $10/mo voice-line discount applies automatically
 to Scott's existing T-Mobile account/line, or requires a separate sign-up step.
 
