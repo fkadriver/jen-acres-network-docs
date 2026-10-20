@@ -499,12 +499,12 @@ After creating all rules, verify the order in **Firewall → Rules → Floating*
 
 With floating rules handling security policies, per-interface rules become **very simple**.
 
-> **Starlink multi-WAN**: the internet-facing "allow to any" rule on each client network
-> below (MGMT, SERVERS, WIFI_SECURE, GUEST, HomeAssist, and the Cailin/Cailin network) has
-> its **Gateway** field set to `WAN_BALANCE` — a gateway group that load-balances 50/50
-> against the Starlink secondary WAN. DMZ is excluded (it bypasses the router entirely),
-> and Tailscale traffic is deliberately kept off the balanced group. See
-> [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md) for the full setup and rationale.
+> **WAN**: Kinetic is off; Starlink is the sole connection (system default gateway).
+> The internet-facing "allow to any" rule on each client network below no longer sets
+> an explicit **Gateway** field — that was `WAN_BALANCE` (a load-balance group against
+> Kinetic) until it was removed 2026-10-20 along with Kinetic going off. Rules now
+> fall through to the system default gateway (Starlink) with no explicit setting. See
+> [10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md) for current state and history.
 
 ### MGMT (LAN) Interface Rules
 
@@ -516,7 +516,6 @@ With floating rules handling security policies, per-interface rules become **ver
 - **Protocol**: any
 - **Source**: MGMT net
 - **Destination**: any
-- **Gateway**: `WAN_BALANCE`
 - **Description**: `Allow management network full access`
 
 **Click:** Save → Apply Changes
@@ -535,7 +534,6 @@ Both Secure_Net interfaces use the same single rule — floating rules handle MG
 - **Protocol**: any
 - **Source**: *[interface]* net
 - **Destination**: any
-- **Gateway**: `WAN_BALANCE`
 - **Description**: `Allow internet and LAN access (MGMT blocked by floating rule)`
 
 **Click:** Save → Apply Changes
@@ -578,7 +576,6 @@ All three Unsecure_Net interfaces use the same single rule — floating rules ha
 - **Protocol**: any
 - **Source**: *[interface]* net
 - **Destination**: any
-- **Gateway**: `WAN_BALANCE`
 - **Description**: `Allow internet access (isolation enforced by floating rules)`
 
 **Click:** Save → Apply Changes
