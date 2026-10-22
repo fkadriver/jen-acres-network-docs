@@ -26,10 +26,12 @@ safety net for all subsequent work.
 
 ## Download OPNsense
 
-> This router is currently running **OPNsense 26.7.5**, kept current via
-> `opnsense-update` (System → Firmware, or `configctl firmware upgrade` + a reboot —
-> see the router's own update history rather than this doc for what's actually
-> installed). For a *fresh* install, get the current DVD image and checksum from the
+> This router is currently running **OPNsense 26.7.7**, kept current via
+> `opnsense-update` (System → Firmware, or `configctl firmware update` for routine
+> package/point-release updates — `configctl firmware upgrade` is for pinned
+> major-version jumps only and will fail here since `UPGRADE_RELEASE` has never been
+> set on this box; see the router's own update history rather than this doc for what's
+> actually installed). For a *fresh* install, get the current DVD image and checksum from the
 > official download page rather than a hardcoded URL here, since the version and
 > mirror paths below will inevitably go stale:
 > **https://opnsense.org/download/**

@@ -1,6 +1,6 @@
 # Home Network Configuration - OPNsense
 
-Complete network configuration for x86 quad-port router running **OPNsense 26.7.5** (FreeBSD-based) with VLAN segmentation, Pi-hole DNS filtering, Tailscale subnet routing, Starlink multi-WAN load balancing, and comprehensive security policies.
+Complete network configuration for x86 quad-port router running **OPNsense 26.7.7** (FreeBSD-based) with VLAN segmentation, Pi-hole DNS filtering, Tailscale subnet routing, Starlink multi-WAN load balancing, and comprehensive security policies.
 
 > **Note**: Previous OpenWRT configurations are preserved in [`archive/openwrt/`](archive/openwrt/) for reference.
 
@@ -41,7 +41,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
     - `em1`: LAN/trunk (to Aruba switch — carries all VLANs)
     - `em2`: STARLINK (second WAN, Starlink V5, opt9)
     - `em3`: Break-glass emergency access (192.168.99.0/29)
-- **Switch**: HPE Aruba 2530-24G PoE+ J9773A (192.168.1.2, managed, VLAN-capable, 195W PoE+)
+- **Switch**: HPE Aruba 2530-24G PoE+ J9773A, firmware YA.16.11.0029 (192.168.1.2, managed, VLAN-capable, 195W PoE+)
   - Port 1: Router trunk (VLANs 1, 10, 11, 20, 21, 30)
   - Port 2: NAS01 (VLAN 10)
   - Ports 3, 5: Pi-holes (VLAN 10)
