@@ -1,8 +1,8 @@
 # Server Closet Cooling (HVAC Return Tap + HA-Automated Fan)
 
 **Status: planning — not yet implemented.** Site survey of the closet ceiling is done
-(see below). **Next blocking step: get a dedicated 20A circuit/outlet run to the
-closet** before mounting the fan or anything else permanent.
+(see below). Electrical prerequisite (dedicated 20A circuit) is tracked in
+[12_UPS_POWER.md](12_UPS_POWER.md).
 
 ## Problem
 
@@ -27,10 +27,10 @@ needs somewhere to come in from the room.
 door, the fan would be pulling against a closed box: starved airflow at best, or
 straining against the door/frame seal at worst.
 
-**Decision: a wall transfer vent into the bedroom, not a door modification.** Cut low
-on the wall behind nas01 (bottom-left of the closet), paired with the return grille at
-the opposite top corner (upper-right, near the ceiling duct bay). Two reasons this
-beats the door options:
+**Decision: a wall transfer vent into the adjacent hallway, not the bedroom, and not a
+door modification.** Cut low on the wall behind nas01 (bottom-left of the closet, on
+the hallway side), paired with the return grille at the opposite top corner
+(upper-right, near the ceiling duct bay). Reasons this beats the alternatives:
 
 - **Better airflow path.** Diagonal, low-to-high, source-to-exhaust — makeup air enters
   right where the NAS (the biggest heat source) sits and has to rise/sweep across the
@@ -39,11 +39,11 @@ beats the door options:
   near the floor.
 - **Easier to revert.** A drywall patch if the server closet ever moves is simpler than
   restoring a modified or swapped door.
-
-Because this vent opens directly into the bedroom, use a **sound-baffled/offset
-transfer vent kit** (insulated duct box between the two grilles, not a straight
-grille-on-grille hole) — cuts down on fan and equipment noise reaching the bedroom at
-night, not just airflow resistance.
+- **Hallway over bedroom.** The hallway runs cooler than the bedroom (not held at
+  sleeping-comfort setpoint), so makeup air is pulling in air that's already closer to
+  ambient. It also means no one's trying to sleep next to the vent, so **no sound
+  baffling is required** — a plain transfer grille is fine, simpler and cheaper than the
+  sound-baffled kit a bedroom-facing vent would have needed.
 
 Chosen over a standalone AC/mini-split because the actual heat load is small — a
 dedicated unit's minimum output is almost always higher than needed, causing
@@ -78,67 +78,21 @@ IMG_4496–4498, HEIC). Findings:
 
 Diagonal flow across the closet, low to high:
 
-- **Intake**: wall transfer vent, low, behind nas01 (bottom-left)
+- **Intake**: wall transfer vent, low, behind nas01 (bottom-left), into the hallway
 - **Exhaust**: ceiling return grille, far end, near the equipment rack (upper-right)
 
 This pulls makeup air across and up through the full equipment run — both the 8' length
 and the vertical rise of the rack — before it exits into the return, rather than
 short-circuiting near one end.
 
-## Electrical: Dedicated 20A Circuit
-
-Blocking prerequisite — nothing else in this project gets powered until this is in.
-One circuit covers the fan plus the existing rack load (NAS/switch/router/UPS, well
-under 20A @ 120V's 1920W continuous rating at 80% derate).
-
-**Check local code/AHJ before starting** — specifically whether a permit/inspection is
-required and whether AFCI protection applies to this room/circuit (many jurisdictions
-following 2020+ NEC require AFCI for bedroom-area circuits, which a closet off a
-bedroom likely counts as). If in doubt, or not comfortable working in the panel, hire a
-licensed electrician — this doc assumes DIY only to the extent local code allows it.
-
-1. **Plan the run.** Panel → closet. The ceiling joist bay above the closet is already
-   open (see Site Survey) — convenient for fishing cable if the panel is reachable
-   through the same floor/joist system.
-2. **Confirm panel capacity** — open slot for one new single-pole 20A breaker, and
-   headroom in the panel's overall load calc.
-3. **Kill power and verify dead** before any panel work — shut off main (or the
-   relevant area), confirm with a non-contact tester *and* a multimeter across the
-   breaker terminals before touching anything.
-4. **Run 12/2 NM-B (Romex)** from the panel to the closet — 12 AWG is required for a
-   20A circuit (14 AWG is only rated for 15A). Secure per code: stapled within 12" of
-   every box, supported every 4.5 ft along the run, and nail-plated wherever it passes
-   through a joist/stud within 1.25" of the edge (relevant here given the Romex and
-   ducting already sharing that joist bay — keep the new run clear of both).
-5. **Install the breaker** — single-pole 20A, AFCI/combination type if required by
-   local code for this circuit location. Label it clearly in the panel directory (e.g.
-   "Server Closet — 20A").
-6. **Set the box and receptacle** at the planned closet location — a 20A-rated duplex
-   receptacle (NEMA 5-20R, the T-slot style), properly grounded.
-7. **Terminate and test** — land conductors at the breaker and neutral/ground bars,
-   restore power, verify ~120V at the receptacle with a multimeter, then check wiring
-   correctness and ground with a standard outlet tester. Test the AFCI button if
-   applicable.
-
-### Materials
-
-| Item | Spec |
-|---|---|
-| Cable | 12/2 NM-B (Romex), length = panel-to-closet run |
-| Breaker | Single-pole 20A (AFCI/combo if required locally) |
-| Receptacle | 20A duplex, NEMA 5-20R (T-slot) |
-| Box | Standard single-gang, sized for the receptacle + 12 AWG fill |
-| Fasteners | Cable staples, nail plates for any joist/stud crossings |
-
 ## Parts List
 
 ### Makeup Air / Wall Transfer Vent
 
-- A **sound-baffled wall transfer vent kit** (e.g. Home Intuition or Imperial
-  sound-dampening transfer vent, ~$30–50) — insulated/lined duct box between two
-  grilles rather than a straight hole, to cut down on fan/equipment noise reaching the
-  bedroom. Sized to the stud bay (typically 3.5" deep for a 2x4 wall).
-- Cut low, behind nas01, on the closet side; terminates on the bedroom side at a
+- A plain **wall transfer grille/vent kit** (~$10–20 for a pair of grilles, no sound
+  baffling needed since it opens into the hallway, not the bedroom). Sized to the stud
+  bay (typically 3.5" deep for a 2x4 wall).
+- Cut low, behind nas01, on the closet side; terminates on the hallway side at a
   matching low wall location.
 
 ### Fan
@@ -166,7 +120,7 @@ sheet metal pan at the return tap.
 ### Power
 
 Smart plugs/relays already on hand — **just need the physical 20A outlet installed**
-(see Electrical section above).
+(see [12_UPS_POWER.md](12_UPS_POWER.md)).
 
 - NAS and UPS: not on switchable smart plugs (accidental cutoff risks filesystem
   corruption) — NAS via native Synology/QNAP integration, UPS via NUT.
@@ -187,23 +141,47 @@ Smart plugs/relays already on hand — **just need the physical 20A outlet insta
 
 HA Green has no built-in radio.
 
-- **Home Assistant Connect ZBT-1** (official, ~$35), on a 3–6 ft USB extension cable,
-  mounted away from the closet's metal shelving/rack and WiFi APs — Zigbee shares the
-  2.4GHz band, and that closet is a rough RF environment for it.
-- Cheaper alternative: Sonoff ZBDongle-E (~$20, same Silicon Labs chip).
+- **Home Assistant Connect ZBT-2** (official successor to the ZBT-1, which is now
+  discontinued, ~$49) — Zigbee/Thread/Matter USB adapter, better antenna and faster
+  UART than the ZBT-1. On a 3–6 ft USB extension cable, mounted away from the closet's
+  metal shelving/rack and WiFi APs — Zigbee shares the 2.4GHz band, and that closet is
+  a rough RF environment for it. [Official product page](https://www.home-assistant.io/connect/zbt-2/),
+  also at [Ameridroid](https://ameridroid.com/products/home-assistant-connect-zbt-2)
+  and [Everything Smart](https://shop.everythingsmart.io/products/home-assistant-connect-zbt-2).
+- Cheaper alternative: **Sonoff ZBDongle-E** (~$18–30, same Silicon Labs EFR32MG21
+  chip) — [Amazon](https://www.amazon.com/sonoff-zigbee-dongle/s?k=sonoff+zigbee+dongle),
+  [AliExpress](https://www.aliexpress.us/item/3256803932977988.html).
 - Favor Sonoff/Third Reality Zigbee devices over Aqara initially — Aqara has had known
   pairing quirks on a ZHA mesh with few routers present.
 
+### Bluetooth (for cheap BLE LED strips)
+
+Generic BLE LED strips (no WiFi, straight Bluetooth) need real local BT coverage where
+they actually are — not a single adapter stuck in the closet, which has the same bad
+2.4GHz RF environment as the Zigbee radio and is probably nowhere near the strips
+anyway.
+
+- **ESPHome Bluetooth proxy** — a cheap ESP32 board flashed with ESPHome's proxy
+  firmware, placed in whichever room(s) have the strips, extending BLE range to HA over
+  WiFi instead. **M5Stack Atom Lite** (~$7.50–10, no soldering, flashes via ESPHome's
+  browser-based web installer) is the standard pick:
+  [M5Stack official store](https://shop.m5stack.com/products/atom-lite-esp32-development-kit),
+  [Amazon](https://us.amazon.com/M5Stack-Official-Atom-ESP32-Development/dp/B0FB94ZFXY),
+  [Pimoroni](https://shop.pimoroni.com/products/atom-lite-esp32-development-kit),
+  [The Pi Hut](https://thepihut.com/products/atom-lite-esp32-development-kit).
+- Budget one per room/area with actual BLE devices rather than trying to cover the
+  whole house from a single proxy.
+
 ## Outstanding / TODO
 
-- [ ] **Dedicated 20A circuit/outlet in the closet** (blocking — see Electrical
-      section above for steps)
-- [ ] **Cut wall transfer vent behind nas01** (bottom-left, into bedroom) — required
+- [ ] **Cut wall transfer vent behind nas01** (bottom-left, into hallway) — required
       for the return tap to work at all; door is solid, so this is the makeup-air path
 - [ ] Identify the second flex duct in the joist bay before cutting near it
 - [ ] Cut return grille opening, clear local insulation, seal drywall-to-joist edge
-- [ ] Mount fan + Zigbee plug, wire to the new 20A circuit
+- [ ] Mount fan + Zigbee plug, wire to the new 20A circuit (see
+      [12_UPS_POWER.md](12_UPS_POWER.md))
 - [ ] Pair Zigbee coordinator, set up ZHA, pair sensor + plug
+- [ ] Flash and place ESPHome Bluetooth proxy(s) for the BLE LED strips
 - [ ] Configure the Generic Thermostat helper in HA
 - [ ] Validate: confirm closet temp tracks near room ambient under normal load
 
