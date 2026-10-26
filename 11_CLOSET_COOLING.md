@@ -125,12 +125,27 @@ sheet metal pan at the return tap.
 
 ### Power
 
-Smart plugs/relays already on hand — **just need the physical 20A outlet installed**
-(see [12_UPS_POWER.md](12_UPS_POWER.md)).
+**Fan control: SONOFF S40 Lite (Zigbee smart plug), ~$15.** The fan (AC Infinity
+CLOUDLINE S4 or the TerraBloom/iPower alternative) ships with a standard power cord —
+no hardwiring or inline relay needed, just plug the fan into the S40 Lite and the S40
+Lite into the new 20A outlet. Picked over a generic plug for three reasons:
+
+- **Energy monitoring built in** — exposes watts/kWh as HA entities on pairing, no
+  config needed. Confirms the fan is actually drawing current; a stalled motor shows up
+  as 0W instead of failing silently.
+- **Acts as a Zigbee router**, extending mesh coverage from right at the far end of the
+  closet — useful given the RF concerns already noted for this space (metal shelving,
+  WiFi APs).
+- Pairs natively with ZHA, no cloud dependency, consistent with everything else in
+  this plan.
+
+This is the switch entity the Generic Thermostat helper below controls — still need
+the physical 20A outlet installed first (see [12_UPS_POWER.md](12_UPS_POWER.md)).
 
 - NAS and UPS: not on switchable smart plugs (accidental cutoff risks filesystem
   corruption) — NAS via native Synology/QNAP integration, UPS via NUT.
-- Fan and switch/OPNsense box: fine on switchable Zigbee plugs.
+- Switch/OPNsense box: fine on a switchable Zigbee plug too, if wanted, using the same
+  pick.
 
 ### Sensor / "Thermostat"
 
