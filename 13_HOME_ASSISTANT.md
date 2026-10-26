@@ -26,11 +26,11 @@ adapters should be on USB extension cables routed out of the closet where practi
 | HA official adapter | Connect ZBT-2 (~$49) | Connect ZWA-2 (~$69) |
 | Best fit here | High-volume cheap sensors/plugs (temp/humidity, smart plugs) | Door locks, in-wall light switches — categories where certified reliability matters more than price |
 
-**Decision: run both.** Zigbee (ZBT-2) for the high-volume sensor/plug fleet — same
-pattern as the closet's SNZB-02D + smart plug. Z-Wave (ZWA-2) for the door lock and
-likely in-wall switches — Z-Wave's certified interop and sub-GHz band (no WiFi
-contention, important given how much 2.4GHz traffic this network already has) matter
-more than price for security-adjacent and mains-switching hardware.
+**Zigbee (ZBT-2): confirmed need**, for the high-volume sensor/plug fleet — same
+pattern as the closet's SNZB-02D + smart plug. **Z-Wave (ZWA-2): not yet justified.**
+The door lock no longer forces it (see Door Locks below — the existing lock can stay on
+Bluetooth via a local community integration); it now comes down entirely to the Remote
+Light Switches decision. Buy the ZWA-2 only once something concrete needs it.
 
 ## Radio Adapters
 
@@ -159,12 +159,38 @@ again" is worth the premium.
 
 ### Door Locks
 
-Current: Ultraloq U-Bolt (confirm which variant — WiFi-bridge or Z-Wave). The **Z-Wave
-variant has official "Works with Home Assistant" certification** and runs fully local —
-no internet dependency for lock/unlock. If the current unit is the WiFi-bridge variant,
-it's worth checking whether a Z-Wave module/swap is available, since Z-Wave is the
-mature, certified standard for this category generally (Schlage, Yale, Kwikset all
-have Z-Wave lines) — this is the main justification for adding the ZWA-2 at all.
+**Confirmed (2026-10-xx):** the installed lock is the original **ULTRALOQ U-Bolt**,
+purchased 2021 — Amazon listing confirms "5 in 1 Keyless Entry... with Bluetooth, App
+Control" with no mention of WiFi or Z-Wave. This is the **Bluetooth-only** base model,
+not the newer Z-Wave-certified U-Bolt Pro/Bolt lines. Confirmed via research: **there
+is no Z-Wave module or upgrade path for this generation of lock** — Z-Wave Ultraloqs
+are a separate product line, not a retrofit. Getting Z-Wave here means replacing the
+lock outright, not adding a module.
+
+Two real paths, not one:
+
+1. **Keep the lock, go local-BLE.** Community integrations
+   ([ultraloq-ble-ha, chaseflick4 fork](https://github.com/chaseflick4/ultraloq-ble-ha) —
+   explicitly supports the original U-Bolt;
+   [inventor7777 fork](https://github.com/inventor7777/ultraloq-ble-ha) is the broader
+   alternative) give local Bluetooth control in HA — no cloud round-trip for day-to-day
+   lock/unlock, internet only needed once during initial setup (pulls lock info from
+   U-tec's Xthings API). Needs active GATT Bluetooth reachable from HA — the host's own
+   radio, a USB adapter, or (the natural fit here) **an ESPHome Bluetooth proxy near the
+   front door** — same infrastructure already planned for the BT lights, just another
+   proxy placement. **Zero hardware replacement cost.** Caveat: this is a
+   community-maintained integration (two competing forks exist, and the Ultraloq
+   community forum has an open thread asking for better official support) — worth
+   weighing that maturity level against the fact that it's controlling the front door,
+   not a light bulb.
+2. **Replace with an official Z-Wave Ultraloq** (U-Bolt Pro Z-Wave or the newer Bolt
+   Z-Wave) — officially "Works with Home Assistant" certified, fully local, no
+   community-integration dependency. Costs a new lock (~$180–220+) to get there.
+
+**This removes the lock as automatic justification for buying the ZWA-2** — path 1
+keeps everything on Zigbee + Bluetooth infrastructure already planned, no Z-Wave radio
+required for the door at all. Z-Wave now hinges entirely on the Remote Light Switches
+decision below, not the lock.
 
 ### Temp/Humidity Sensors (whole-house + future per-room fan units)
 
@@ -185,20 +211,24 @@ as-is.
 ### Remote Light Switches
 
 **Z-Wave in-wall switches** (Zooz, Inovelli, GE/Jasco) are the reliability standard for
-mains switching — same certified-interop argument as locks, and bundles onto the ZWA-2
-already justified by the lock. Zigbee alternatives exist (Third Reality, Sonoff ZBMINI,
-IKEA) if keeping everything on one radio is preferred over protocol-matching by
-category — worth deciding once the lock situation is settled, since that determines
-whether a Z-Wave radio is in place anyway.
+mains switching — same certified-interop argument made for locks above. Zigbee
+alternatives exist (Third Reality, Sonoff ZBMINI, IKEA) and now carry more weight than
+before: with the lock's path-1 option (keep it, go local-BLE) removing the lock as
+automatic Z-Wave justification, **this category is now the sole deciding factor for
+whether the ZWA-2 gets purchased at all.** If switches go Zigbee, there's currently no
+device in the plan that needs Z-Wave — skip the ZWA-2 until something concrete does.
 
 ## Outstanding / TODO
 
-- [ ] Purchase and set up ZBT-2 (Zigbee) and ZWA-2 (Z-Wave) adapters, USB extensions
-      routed out of the closet
-- [ ] Confirm which Ultraloq U-Bolt variant is currently installed (WiFi-bridge vs
-      Z-Wave) and whether a Z-Wave swap/module is available
+- [ ] Purchase and set up ZBT-2 (Zigbee), USB extension routed out of the closet
+- [x] Confirm which Ultraloq U-Bolt variant is installed — 2021 U-Bolt, Bluetooth-only,
+      no Z-Wave module/upgrade path exists for this generation
+- [ ] Decide lock path: local-BLE community integration (free, unofficial) vs
+      replacing with an official Z-Wave Ultraloq (~$180–220+, certified)
+- [ ] Decide remote light switch protocol (Z-Wave vs Zigbee) — now the sole factor in
+      whether the ZWA-2 gets purchased at all
 - [ ] Pick weather station (Ecowitt vs Tempest) and set up its local HA integration
-- [ ] Decide remote light switch protocol (Z-Wave vs Zigbee) once the lock is settled
-- [ ] Place first ESPHome Bluetooth proxy (office) for the existing BT lights
+- [ ] Place first ESPHome Bluetooth proxy (office) for the existing BT lights; a second
+      near the front door if the local-BLE lock path is chosen
 - [ ] Pair closet sensor + fan plug once ZBT-2 is up (see
       [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md))
