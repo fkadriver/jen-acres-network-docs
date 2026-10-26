@@ -26,11 +26,16 @@ adapters should be on USB extension cables routed out of the closet where practi
 | HA official adapter | Connect ZBT-2 (~$49) | Connect ZWA-2 (~$69) |
 | Best fit here | High-volume cheap sensors/plugs (temp/humidity, smart plugs) | Door locks, in-wall light switches — categories where certified reliability matters more than price |
 
-**Zigbee (ZBT-2): confirmed need**, for the high-volume sensor/plug fleet — same
-pattern as the closet's SNZB-02D + smart plug. **Z-Wave (ZWA-2): not yet justified.**
-The door lock no longer forces it (see Door Locks below — the existing lock can stay on
-Bluetooth via a local community integration); it now comes down entirely to the Remote
-Light Switches decision. Buy the ZWA-2 only once something concrete needs it.
+**Zigbee (ZBT-2): confirmed need now**, for the high-volume sensor/plug fleet — same
+pattern as the closet's SNZB-02D + smart plug. **Z-Wave (ZWA-2): justified eventually,
+via Z-Wave Long Range, but not an immediate purchase** — the barn (see Barn Lighting
+below) is a 2–3 year want, not a current requirement, so there's no rush on this radio.
+Not because of the door lock either (see Door Locks below, that's no longer a forcing
+function). Worth knowing the answer in advance, though: Zigbee has no realistic path to
+100 yards of open acreage short of a chain of mains-powered repeaters with nothing to
+plug them into along the way; Z-Wave LR's star topology (direct hub↔device, no mesh
+hops, rated to 1300 ft) is purpose-built for exactly this
+"detached building on a large property" case.
 
 ## Radio Adapters
 
@@ -189,8 +194,40 @@ Two real paths, not one:
 
 **This removes the lock as automatic justification for buying the ZWA-2** — path 1
 keeps everything on Zigbee + Bluetooth infrastructure already planned, no Z-Wave radio
-required for the door at all. Z-Wave now hinges entirely on the Remote Light Switches
-decision below, not the lock.
+required for the door at all. Doesn't matter either way now that the barn (below)
+justifies the ZWA-2 on its own, but still the right call for the lock specifically on
+its own merits.
+
+### Barn Lighting (100 yds, steel construction) — want, 2–3 years out
+
+20+ acre property, steel barn ~100 yards from the house. Only ask here is **light
+control** — not sensors, not security, not a full automation buildout. **Not a current
+requirement** — captured now because it settles the Zigbee-vs-Z-Wave question in
+advance, not because anything needs buying yet.
+
+- **Z-Wave Long Range, not Zigbee.** This is the concrete case that justifies the
+  ZWA-2 (see Zigbee vs Z-Wave above) — Z-Wave LR's star topology reaches a detached
+  building at this distance directly, no mesh chain required.
+- **Steel is the harder problem, not distance.** A steel building attenuates RF
+  severely regardless of protocol — getting a signal to the barn's exterior wall and
+  getting it *into* the structure to a switch mounted inside are two different
+  problems. Mount the switch as close to a door/window/eave opening as practical
+  rather than deep inside the structure, and treat the published 1300 ft Z-Wave LR
+  range figure as a best case, not a guarantee, given the steel.
+- **Hardware**: a Z-Wave LR in-wall switch at the barn's existing light switch
+  location — **Zooz ZEN76 800LR** (on/off, ~$35–40) for simple control, or **ZEN77
+  800LR** (dimmer, ~$45–50) if dimming is wanted. Both need the ZWA-2 (or a Zooz
+  ZST39 LR stick) as the controller, with Long Range mode enabled in Z-Wave JS.
+- **Test before committing.** Bring a single LR device out to the barn's actual switch
+  location and verify a usable signal before buying more than one — 100 yards through
+  open air is well within spec, but the steel construction is the real unknown here,
+  not the distance.
+- **Fallback if Z-Wave LR doesn't reach reliably**: a dedicated point-to-point outdoor
+  WiFi bridge (e.g. Ubiquiti airMAX/NanoStation pair, one at the house, one at the
+  barn) extends the actual LAN out there, after which any ordinary WiFi smart switch
+  works locally at the barn end — a bigger project, but fully reliable once in place,
+  and opens the door to anything else out there later (cameras, sensors) if that ever
+  comes up.
 
 ### Temp/Humidity Sensors (whole-house + future per-room fan units)
 
@@ -211,12 +248,12 @@ as-is.
 ### Remote Light Switches
 
 **Z-Wave in-wall switches** (Zooz, Inovelli, GE/Jasco) are the reliability standard for
-mains switching — same certified-interop argument made for locks above. Zigbee
-alternatives exist (Third Reality, Sonoff ZBMINI, IKEA) and now carry more weight than
-before: with the lock's path-1 option (keep it, go local-BLE) removing the lock as
-automatic Z-Wave justification, **this category is now the sole deciding factor for
-whether the ZWA-2 gets purchased at all.** If switches go Zigbee, there's currently no
-device in the plan that needs Z-Wave — skip the ZWA-2 until something concrete does.
+mains switching — same certified-interop argument made for locks above. The ZWA-2 is
+eventually coming regardless (see Barn Lighting above), but that's 2–3 years out, so
+don't let it drive an in-house switch decision that's needed sooner — Zigbee alternatives exist
+(Third Reality, Sonoff ZBMINI, IKEA) if keeping in-house switches on the cheaper/larger
+ecosystem is preferred anyway — no longer a decision that determines whether a Z-Wave
+radio gets bought at all, just which protocol these specific switches land on.
 
 ## Outstanding / TODO
 
@@ -225,9 +262,14 @@ device in the plan that needs Z-Wave — skip the ZWA-2 until something concrete
       no Z-Wave module/upgrade path exists for this generation
 - [ ] Decide lock path: local-BLE community integration (free, unofficial) vs
       replacing with an official Z-Wave Ultraloq (~$180–220+, certified)
-- [ ] Decide remote light switch protocol (Z-Wave vs Zigbee) — now the sole factor in
-      whether the ZWA-2 gets purchased at all
+- [ ] Decide remote light switch protocol (Z-Wave vs Zigbee) for the in-house switches
+      — not gated on the barn/ZWA-2 timeline, that's years out
 - [ ] Pick weather station (Ecowitt vs Tempest) and set up its local HA integration
+
+**Not current — barn lighting, 2–3 years out:**
+
+- [ ] Purchase ZWA-2 (Z-Wave) and one Zooz ZEN76/77 800LR switch; range-test at the
+      barn's actual switch location before buying more
 - [ ] Place first ESPHome Bluetooth proxy (office) for the existing BT lights; a second
       near the front door if the local-BLE lock path is chosen
 - [ ] Pair closet sensor + fan plug once ZBT-2 is up (see
