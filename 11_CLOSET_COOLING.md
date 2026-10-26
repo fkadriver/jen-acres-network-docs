@@ -85,6 +85,12 @@ This pulls makeup air across and up through the full equipment run — both the 
 and the vertical rise of the rack — before it exits into the return, rather than
 short-circuiting near one end.
 
+**HA Green** sits on top of the metal cabinet on the left — not enclosed in metal, but
+still worth a USB extension cable for the Zigbee adapter, routed out of the closet
+entirely and into the hallway (same opening as the makeup-air vent) rather than left
+sitting in the closet's RF-noisy environment. Radio hardware details are in
+[13_HOME_ASSISTANT.md](13_HOME_ASSISTANT.md).
+
 ## Parts List
 
 ### Makeup Air / Wall Transfer Vent
@@ -128,49 +134,15 @@ Smart plugs/relays already on hand — **just need the physical 20A outlet insta
 
 ### Sensor / "Thermostat"
 
-- **SONOFF SNZB-02D** Zigbee temp/humidity sensor (~$15), mounted near the top of the
-  closet close to the new return grille where heat concentrates.
+- **SONOFF SNZB-02D** Zigbee temp/humidity sensor (~$15) — mounted **near the fan/return
+  tap, not inside the metal rack.** The rack would both shield the Zigbee signal and
+  read rack-internal temp rather than the air actually leaving the closet.
 - In Home Assistant, use the built-in **Generic Thermostat** helper (Settings → Devices
   & Services → Helpers → *Generic Thermostat*) rather than hand-written automation
   YAML: sensor = SNZB-02D, switch = fan's Zigbee plug, set target temp + hysteresis.
   Produces a native `climate` entity with a dashboard thermostat card.
 - Optional second automation: mobile notification if closet temp exceeds a critical
   threshold (e.g. 90°F) — early warning for a dead fan or blocked return.
-
-### Zigbee Coordinator (for HA Green)
-
-HA Green has no built-in radio.
-
-- **Home Assistant Connect ZBT-2** (official successor to the ZBT-1, which is now
-  discontinued, ~$49) — Zigbee/Thread/Matter USB adapter, better antenna and faster
-  UART than the ZBT-1. On a 3–6 ft USB extension cable, mounted away from the closet's
-  metal shelving/rack and WiFi APs — Zigbee shares the 2.4GHz band, and that closet is
-  a rough RF environment for it. [Official product page](https://www.home-assistant.io/connect/zbt-2/),
-  also at [Ameridroid](https://ameridroid.com/products/home-assistant-connect-zbt-2)
-  and [Everything Smart](https://shop.everythingsmart.io/products/home-assistant-connect-zbt-2).
-- Cheaper alternative: **Sonoff ZBDongle-E** (~$18–30, same Silicon Labs EFR32MG21
-  chip) — [Amazon](https://www.amazon.com/sonoff-zigbee-dongle/s?k=sonoff+zigbee+dongle),
-  [AliExpress](https://www.aliexpress.us/item/3256803932977988.html).
-- Favor Sonoff/Third Reality Zigbee devices over Aqara initially — Aqara has had known
-  pairing quirks on a ZHA mesh with few routers present.
-
-### Bluetooth (for cheap BLE LED strips)
-
-Generic BLE LED strips (no WiFi, straight Bluetooth) need real local BT coverage where
-they actually are — not a single adapter stuck in the closet, which has the same bad
-2.4GHz RF environment as the Zigbee radio and is probably nowhere near the strips
-anyway.
-
-- **ESPHome Bluetooth proxy** — a cheap ESP32 board flashed with ESPHome's proxy
-  firmware, placed in whichever room(s) have the strips, extending BLE range to HA over
-  WiFi instead. **M5Stack Atom Lite** (~$7.50–10, no soldering, flashes via ESPHome's
-  browser-based web installer) is the standard pick:
-  [M5Stack official store](https://shop.m5stack.com/products/atom-lite-esp32-development-kit),
-  [Amazon](https://us.amazon.com/M5Stack-Official-Atom-ESP32-Development/dp/B0FB94ZFXY),
-  [Pimoroni](https://shop.pimoroni.com/products/atom-lite-esp32-development-kit),
-  [The Pi Hut](https://thepihut.com/products/atom-lite-esp32-development-kit).
-- Budget one per room/area with actual BLE devices rather than trying to cover the
-  whole house from a single proxy.
 
 ## Outstanding / TODO
 
@@ -180,8 +152,9 @@ anyway.
 - [ ] Cut return grille opening, clear local insulation, seal drywall-to-joist edge
 - [ ] Mount fan + Zigbee plug, wire to the new 20A circuit (see
       [12_UPS_POWER.md](12_UPS_POWER.md))
-- [ ] Pair Zigbee coordinator, set up ZHA, pair sensor + plug
-- [ ] Flash and place ESPHome Bluetooth proxy(s) for the BLE LED strips
+- [ ] Route Zigbee adapter's USB extension out to the hallway (radio setup itself is
+      tracked in [13_HOME_ASSISTANT.md](13_HOME_ASSISTANT.md))
+- [ ] Pair sensor + fan plug to the Zigbee mesh once the coordinator is up
 - [ ] Configure the Generic Thermostat helper in HA
 - [ ] Validate: confirm closet temp tracks near room ambient under normal load
 

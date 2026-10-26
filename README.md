@@ -26,10 +26,11 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 
 - **WAN**: Starlink V5, DHCP/CGNAT on em2 (opt9) — sole connection as of 2026-10-20.
   Kinetic (192.168.254.0/24, DHCP from 192.168.254.254) has been turned off; its
-  config is left in place but unused. A T-Mobile Home Internet Backup cellular
-  connection is planned as a Tier2 OPNsense failover gateway, not yet cabled/signed
-  up. See [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md) and
-  [docs/13_CELLULAR_BACKUP_WAN.md](docs/13_CELLULAR_BACKUP_WAN.md).
+  config is left in place but unused. Planned chain: **Starlink → T-Mobile (Tier2
+  failover) → OPNsense `em0`** — T-Mobile Home Internet Backup's gateway isn't inline
+  with Starlink (no WAN-in port), it plugs its LAN-out into the freed-up `em0` as a
+  second WAN interface, with all failover logic in OPNsense. Not yet cabled/signed up.
+  See [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md).
 
 ## Hardware
 
@@ -37,7 +38,9 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
   - Fanless x86_64 mini PC
   - 4GB RAM, 32GB mSATA SSD
   - 4x Intel Gigabit Ethernet ports:
-    - `em0`: WAN (to ISP modem/router — Kinetic)
+    - `em0`: freed up (Kinetic turned off) — planned `CELLULAR` interface for the
+      T-Mobile Home Internet Backup gateway, Tier2 failover behind Starlink, not yet
+      wired in
     - `em1`: LAN/trunk (to Aruba switch — carries all VLANs)
     - `em2`: STARLINK (second WAN, Starlink V5, opt9)
     - `em3`: Break-glass emergency access (192.168.99.0/29)
@@ -87,9 +90,10 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 7. **UniFi AP setup** → [docs/07_UNIFI_AP_SETUP.md](docs/07_UNIFI_AP_SETUP.md)
 8. **Security hardening** → [docs/08_SECURITY_HARDENING.md](docs/08_SECURITY_HARDENING.md)
 9. **nfSensei migration (future)** → [docs/09_NFSENSEI_MIGRATION.md](docs/09_NFSENSEI_MIGRATION.md)
-10. **Starlink multi-WAN** → [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md)
+10. **Starlink WAN + T-Mobile cellular backup** → [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md)
 11. **Closet cooling (planned)** → [docs/11_CLOSET_COOLING.md](docs/11_CLOSET_COOLING.md)
 12. **UPS / power protection (planned)** → [docs/12_UPS_POWER.md](docs/12_UPS_POWER.md)
+13. **Home Assistant / IoT network (early setup)** → [docs/13_HOME_ASSISTANT.md](docs/13_HOME_ASSISTANT.md)
 
 ## Repository Structure
 
@@ -106,9 +110,10 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 │   ├── 07_UNIFI_AP_SETUP.md               # UniFi U6-Pro access point setup
 │   ├── 08_SECURITY_HARDENING.md           # Security hardening (users, SSH, 2FA)
 │   ├── 09_NFSENSEI_MIGRATION.md           # nfSensei migration tracking (future)
-│   ├── 10_STARLINK_MULTIWAN.md            # Starlink multi-WAN load balancing (em2)
+│   ├── 10_STARLINK_MULTIWAN.md            # Starlink WAN (em2) + T-Mobile cellular backup plan (em0)
 │   ├── 11_CLOSET_COOLING.md               # Server closet HVAC return tap + HA fan automation (planned)
 │   ├── 12_UPS_POWER.md                    # UPS sizing, power budget, NUT integration (planned)
+│   ├── 13_HOME_ASSISTANT.md               # HA/IoT network: Zigbee vs Z-Wave, radios, device categories
 │   └── TROUBLESHOOTING.md                 # Consolidated troubleshooting guide
 ├── tailnet/                               # Tailscale ACL policy (git submodule)
 │   ├── policy.hujson                      # Tailscale ACL configuration
