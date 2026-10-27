@@ -100,6 +100,14 @@ sitting in the closet's RF-noisy environment. Radio hardware details are in
   bay (typically 3.5" deep for a 2x4 wall).
 - Cut low, behind nas01, on the closet side; terminates on the hallway side at a
   matching low wall location.
+- **Filter: cut-to-fit MERV 8 filter media roll** — trims down to as small as 4"×10"
+  or 4"×12", smaller than any rigid pre-sized filter, so it's cut to the grille's
+  actual opening rather than hunting for a matching pre-made size. MERV 8 specifically
+  — catches normal household dust without the pressure drop higher MERV ratings would
+  add, which matters given the design's limited CFM headroom (~95 needed, ~100 rated).
+  Stick the patch to the inside of the closet-side grille (most rolls ship with
+  adhesive/hook tape for this) and keep it easily removable — it's pulling air
+  continuously whenever the fan runs, so it'll need periodic cleaning/replacement.
 
 ### Fan
 
