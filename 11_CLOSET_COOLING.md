@@ -166,13 +166,25 @@ paired but has nothing to switch yet.
 
 ### Sensor / "Thermostat"
 
-- **SONOFF SNZB-02D** Zigbee temp/humidity sensor (~$15) — mounted **near the fan/return
-  tap, not inside the metal rack.** The rack would both shield the Zigbee signal and
-  read rack-internal temp rather than the air actually leaving the closet.
+- **SONOFF SNZB-02D** Zigbee temp/humidity sensor (~$15) — purchased and paired as
+  `SONOFF SNZB-02DR2`. Mount **near the fan/return tap, not inside the metal rack** —
+  the rack would both shield the Zigbee signal and read rack-internal temp rather than
+  the air actually leaving the closet. Relevant entities:
+  `sensor.closet_temp_temperature`, `sensor.closet_temp_humidity`,
+  `sensor.closet_temp_battery`.
 - In Home Assistant, use the built-in **Generic Thermostat** helper (Settings → Devices
   & Services → Helpers → *Generic Thermostat*) rather than hand-written automation
-  YAML: sensor = SNZB-02D, switch = fan's Zigbee plug, set target temp + hysteresis.
-  Produces a native `climate` entity with a dashboard thermostat card.
+  YAML:
+  - Heater (switch) entity: `switch.network_closet_closet_fan`
+  - Temperature sensor: `sensor.closet_temp_temperature`
+  - **AC mode: ON** — this is a cooling setup (fan runs when too hot), and Generic
+    Thermostat defaults to heater logic. Without AC mode enabled, it runs backwards —
+    fan on when cold, off when hot.
+  - Target temp: a few degrees above room ambient (e.g. 78–80°F) as a starting point;
+    hot/cold tolerance ±2°F as a starting point, tune after living with it.
+  - Produces a native `climate` entity with a dashboard thermostat card. Leave it in
+    **Off** mode until the fan is actually mounted and wired — the plug is paired but
+    has nothing to switch yet.
 - Optional second automation: mobile notification if closet temp exceeds a critical
   threshold (e.g. 90°F) — early warning for a dead fan or blocked return.
 
@@ -188,8 +200,10 @@ paired but has nothing to switch yet.
       tracked in [13_HOME_ASSISTANT.md](13_HOME_ASSISTANT.md))
 - [x] Pair fan plug to the Zigbee mesh — SONOFF S40 Lite paired as
       `switch.network_closet_closet_fan` (coordinator: SONOFF ZBDongle-E)
-- [ ] Pair temp/humidity sensor once it arrives
-- [ ] Configure the Generic Thermostat helper in HA
+- [x] Pair temp/humidity sensor — SONOFF SNZB-02DR2 paired, entities include
+      `sensor.closet_temp_temperature` and `sensor.closet_temp_humidity`
+- [ ] Configure the Generic Thermostat helper in HA (values spec'd above — remember
+      AC mode)
 - [ ] Validate: confirm closet temp tracks near room ambient under normal load
 
 ## References
