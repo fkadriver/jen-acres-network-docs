@@ -357,20 +357,37 @@ UL-listed, code-compliant standalone smoke/CO alarms aren't already in place at 
 required locations, that's the non-negotiable first layer regardless of what gets
 added here.
 
-**Placement** (more than one CO unit, given three separate combustion sources):
+**Smoke side is already covered** — standalone smoke detectors already exist in
+all bedrooms. HS1SA-E units are an opportunistic replace-as-needed upgrade path
+(e.g. when an existing one hits end-of-life or starts chirping), not an urgent bulk
+purchase. **CO side is the actual gap** — no existing CO detection mentioned, so
+the HS1CA-E placement below is net-new, not a replacement.
 
-- One per level of the house, minimum — CO spreads through air circulation, not
-  room-by-room the way smoke does.
-- Near sleeping areas specifically — the actual code-driven placement requirement
-  in most jurisdictions (CO incidents are most dangerous while asleep).
-- **Near the wood fireplace specifically** — incomplete combustion / damper issues
-  are a distinct, somewhat likely failure mode compared to the furnace/water heater.
-- **Furnace/water heater area** — if enclosed in a utility space, a unit there
-  catches a problem before it diffuses through the house, more warning time than a
-  bedroom-only detector.
+**Placement — confirmed layout**: furnace and water heater share one basement
+utility room (also has an office and an unused bedroom down there); all
+currently-used bedrooms are on the main level off a single hallway; fireplace is
+also on the main level.
 
-Realistically 3+ HS1CA-E units depending on actual layout (fireplace room,
-mechanical/utility area, main sleeping area/hallway) rather than just one.
+**3 HS1CA-E units, not collapsing the fireplace and hallway into one just because
+they're on the same floor** — "near sleeping areas" is a per-location code
+requirement (in the immediate vicinity of the bedrooms), not a per-floor one, and a
+fireplace placed for combustion-source coverage isn't necessarily close enough to
+the bedroom hallway to double as that:
+
+- **Basement utility room (furnace + water heater)** — one HS1CA-E, since both
+  appliances share the same room. Earliest-warning location too — catches a
+  problem before it diffuses up through the house. Incidentally also covers the
+  basement office and unused bedroom, though that's not the placement's primary
+  justification (nobody's sleeping there currently).
+- **Main level, near the fireplace** — one HS1CA-E, for incomplete
+  combustion/damper issues specifically, separate from the furnace/water heater's
+  own safety shutoffs.
+- **Main level, at/near the bedroom hallway** — one HS1CA-E, the actual
+  code-driven sleeping-area placement. Keep this distinct from the fireplace
+  unit above unless the fireplace happens to sit directly off that same hallway —
+  if so, one unit there could reasonably cover both; otherwise, two separate
+  main-level units.
+
 Each pairs independently to ZHA.
 
 ### Legacy 433MHz Sensors (Sharp SPC1107 outdoor sensor) — speculative, not a plan
@@ -408,8 +425,13 @@ sensor itself is needed.
       already provides the disconnect; relay rated 16A vs. heater's 4.2A draw)
 - [ ] Pair relay + one spare SNZB-02D to ZHA, configure Generic Thermostat helper
       (AC mode OFF — this is heating logic, not the closet's cooling logic)
-- [ ] Purchase Heiman HS1SA-E (smoke) and 3+ HS1CA-E (CO) units — placement: wood
-      fireplace room, furnace/water heater area, main sleeping area/hallway
+- [ ] Purchase 3 Heiman HS1CA-E (CO) units — the actual gap, no existing CO
+      detection — placement: basement utility room (furnace+water heater), main
+      level near fireplace, main level at/near the bedroom hallway (confirm
+      fireplace isn't already adjacent to the hallway before buying a 3rd,
+      separate unit)
+- [ ] Heiman HS1SA-E (smoke): opportunistic only — bedrooms already have smoke
+      detectors, replace as each one hits end-of-life rather than a bulk buy
 
 **Not current — barn lighting, 2–3 years out:**
 
