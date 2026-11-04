@@ -255,9 +255,29 @@ don't let it drive an in-house switch decision that's needed sooner — Zigbee a
 ecosystem is preferred anyway — no longer a decision that determines whether a Z-Wave
 radio gets bought at all, just which protocol these specific switches land on.
 
+### Legacy 433MHz Sensors (Sharp SPC1107 outdoor sensor) — speculative, not a plan
+
+Already own a Sharp SPC1107 atomic wall clock; its external temp/humidity sensor
+transmits at **433.92 MHz** — not natively supported by HA. Checked rtl_433's
+supported-device list: Sharp's only existing decoder is for the **SPC775**, a
+different model at 917.2 MHz FSK — different band and modulation, not compatible
+with the SPC1107.
+
+Possible path, if ever pursued: an RTL-SDR USB dongle (~$25–35) + the community
+**rtl_433** HA add-on. Decent odds an existing generic 433MHz decoder happens to
+match it already (cheap sensors in this band often share one of a handful of OEM
+chipsets); if not, reverse-engineering the bit layout from `rtl_433 -A` raw captures
+is plausible (the SPC775 decoder source is a clean template for this) but not
+guaranteed to work out. An afternoon of SDR tinkering, not a real integration plan —
+lower priority than just buying another SONOFF SNZB-02D (same pattern as the closet)
+for the same outcome. Only worth doing as a radio-tinkering exercise, not because the
+sensor itself is needed.
+
 ## Outstanding / TODO
 
-- [ ] Purchase and set up ZBT-2 (Zigbee), USB extension routed out of the closet
+- [x] Purchase and set up Zigbee coordinator — SONOFF ZBDongle-E (ezsp radio), channel
+      locked to 25; closet fan plug + temp sensor both paired (see
+      [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md))
 - [x] Confirm which Ultraloq U-Bolt variant is installed — 2021 U-Bolt, Bluetooth-only,
       no Z-Wave module/upgrade path exists for this generation
 - [ ] Decide lock path: local-BLE community integration (free, unofficial) vs
@@ -272,5 +292,8 @@ radio gets bought at all, just which protocol these specific switches land on.
       barn's actual switch location before buying more
 - [ ] Place first ESPHome Bluetooth proxy (office) for the existing BT lights; a second
       near the front door if the local-BLE lock path is chosen
-- [ ] Pair closet sensor + fan plug once ZBT-2 is up (see
-      [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md))
+
+**Someday / speculative — not a real plan:**
+
+- [ ] Try the Sharp SPC1107 outdoor sensor with an RTL-SDR + rtl_433 (see Legacy
+      433MHz Sensors above) — only if looking for an SDR tinkering project
