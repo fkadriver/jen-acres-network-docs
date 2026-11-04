@@ -133,22 +133,31 @@ sheet metal pan at the return tap.
 
 ### Power
 
-**Fan control: SONOFF S40 Lite (Zigbee smart plug), ~$15.** The fan (AC Infinity
-CLOUDLINE S4 or the TerraBloom/iPower alternative) ships with a standard power cord —
-no hardwiring or inline relay needed, just plug the fan into the S40 Lite and the S40
-Lite into the new 20A outlet. Picked over a generic plug for three reasons:
+**Fan control: SONOFF S40 Lite (Zigbee smart plug), ~$15 — purchased and paired.** The
+fan (AC Infinity CLOUDLINE S4 or the TerraBloom/iPower alternative) ships with a
+standard power cord — no hardwiring or inline relay needed, just plug the fan into the
+S40 Lite and the S40 Lite into the new 20A outlet. Picked over a generic plug for two
+reasons:
 
-- **Energy monitoring built in** — exposes watts/kWh as HA entities on pairing, no
-  config needed. Confirms the fan is actually drawing current; a stalled motor shows up
-  as 0W instead of failing silently.
 - **Acts as a Zigbee router**, extending mesh coverage from right at the far end of the
   closet — useful given the RF concerns already noted for this space (metal shelving,
   WiFi APs).
 - Pairs natively with ZHA, no cloud dependency, consistent with everything else in
   this plan.
 
-This is the switch entity the Generic Thermostat helper below controls — still need
-the physical 20A outlet installed first (see [12_UPS_POWER.md](12_UPS_POWER.md)).
+**Correction: no energy monitoring.** Originally picked partly for built-in energy
+monitoring, but confirmed after pairing — ZHA only exposes `switch`, firmware `update`,
+`identify`, and radio diagnostics (`lqi`/`rssi`) for this device; no watts/kWh sensor.
+The Zigbee S40 Lite doesn't have a metering cluster (that's the WiFi S40, a different
+product). A stalled fan motor won't show up as 0W — there's no power entity to check.
+If current-sensing matters enough to revisit, a plug with a metering cluster (e.g. SONOFF
+S60ZBTPF or similar) would be the fix; not planned for now since the switch/router
+function is what's actually needed here.
+
+This is the switch entity the Generic Thermostat helper below controls — entity id
+`switch.network_closet_closet_fan`. Still need the physical 20A outlet installed
+and the fan itself mounted (see [12_UPS_POWER.md](12_UPS_POWER.md)) — the plug is
+paired but has nothing to switch yet.
 
 - NAS and UPS: not on switchable smart plugs (accidental cutoff risks filesystem
   corruption) — NAS via native Synology/QNAP integration, UPS via NUT.
@@ -177,7 +186,9 @@ the physical 20A outlet installed first (see [12_UPS_POWER.md](12_UPS_POWER.md))
       [12_UPS_POWER.md](12_UPS_POWER.md))
 - [ ] Route Zigbee adapter's USB extension out to the hallway (radio setup itself is
       tracked in [13_HOME_ASSISTANT.md](13_HOME_ASSISTANT.md))
-- [ ] Pair sensor + fan plug to the Zigbee mesh once the coordinator is up
+- [x] Pair fan plug to the Zigbee mesh — SONOFF S40 Lite paired as
+      `switch.network_closet_closet_fan` (coordinator: SONOFF ZBDongle-E)
+- [ ] Pair temp/humidity sensor once it arrives
 - [ ] Configure the Generic Thermostat helper in HA
 - [ ] Validate: confirm closet temp tracks near room ambient under normal load
 
