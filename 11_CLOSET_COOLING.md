@@ -1,8 +1,8 @@
 # Server Closet Cooling (HVAC Return Tap + HA-Automated Fan)
 
 **Status: planning — not yet implemented.** Site survey of the closet ceiling is done
-(see below). Electrical prerequisite (dedicated 20A circuit) is tracked in
-[12_UPS_POWER.md](12_UPS_POWER.md).
+(see below). Zigbee mesh (fan plug + temp sensor) is paired; physical install
+(vent/grille cutting, fan mounting) is still outstanding.
 
 ## Problem
 
@@ -136,7 +136,7 @@ sheet metal pan at the return tap.
 **Fan control: SONOFF S40 Lite (Zigbee smart plug), ~$15 — purchased and paired.** The
 fan (AC Infinity CLOUDLINE S4 or the TerraBloom/iPower alternative) ships with a
 standard power cord — no hardwiring or inline relay needed, just plug the fan into the
-S40 Lite and the S40 Lite into the new 20A outlet. Picked over a generic plug for two
+S40 Lite and the S40 Lite into a wall outlet. Picked over a generic plug for two
 reasons:
 
 - **Acts as a Zigbee router**, extending mesh coverage from right at the far end of the
@@ -155,8 +155,7 @@ S60ZBTPF or similar) would be the fix; not planned for now since the switch/rout
 function is what's actually needed here.
 
 This is the switch entity the Generic Thermostat helper below controls — entity id
-`switch.network_closet_closet_fan`. Still need the physical 20A outlet installed
-and the fan itself mounted (see [12_UPS_POWER.md](12_UPS_POWER.md)) — the plug is
+`switch.network_closet_closet_fan`. Still need the fan itself mounted — the plug is
 paired but has nothing to switch yet.
 
 - NAS and UPS: not on switchable smart plugs (accidental cutoff risks filesystem
@@ -190,21 +189,39 @@ paired but has nothing to switch yet.
 
 ## Outstanding / TODO
 
-- [ ] **Cut wall transfer vent behind nas01** (bottom-left, into hallway) — required
-      for the return tap to work at all; door is solid, so this is the makeup-air path
-- [ ] Identify the second flex duct in the joist bay before cutting near it
-- [ ] Cut return grille opening, clear local insulation, seal drywall-to-joist edge
-- [ ] Mount fan + Zigbee plug, wire to the new 20A circuit (see
-      [12_UPS_POWER.md](12_UPS_POWER.md))
-- [ ] Route Zigbee adapter's USB extension out to the hallway (radio setup itself is
-      tracked in [13_HOME_ASSISTANT.md](13_HOME_ASSISTANT.md))
+Software side (Zigbee pairing, channel, helper config) is done or spec'd. Physical
+side is next — ordered below by actual dependency, top to bottom:
+
+1. [ ] **Identify the second flex duct in the joist bay** before cutting anything near
+       it — pure information-gathering, gates step 2
+2. [ ] **Cut return grille opening** (ceiling, upper-right, near equipment rack), clear
+       local insulation, seal drywall-to-joist edge — depends on step 1; this is also
+       where the fan physically mounts (step 4)
+3. [ ] **Cut wall transfer vent behind nas01** (bottom-left, into hallway) — the
+       makeup-air path; door is solid, so the return tap in step 2 can't work without
+       this. Independent of steps 1–2, can be done in parallel
+4. [ ] **Mount fan + Zigbee plug, plug into power** — depends on step 2 (return tap
+       opening needs to exist first)
+5. [ ] **Route Zigbee adapter's USB extension out to the hallway** (radio setup itself
+       is tracked in [13_HOME_ASSISTANT.md](13_HOME_ASSISTANT.md)) — same opening as
+       the makeup-air vent, bundle with step 3's work
+6. [x] Set up closet high-temp alert automation — notifies if
+       `sensor.closet_temp_temperature` exceeds 90°F for 5+ min, via `notify.iphone`.
+       Doesn't depend on the fan being mounted, so done now
+7. [ ] Configure the Generic Thermostat helper in HA (values spec'd above — remember
+       AC mode) — can technically be done anytime now that both entities exist, but
+       leave it in Off mode until step 4 is done
+8. [ ] Validate: confirm closet temp tracks near room ambient under normal load — last
+       step, depends on everything above
+
+Already done:
+
 - [x] Pair fan plug to the Zigbee mesh — SONOFF S40 Lite paired as
       `switch.network_closet_closet_fan` (coordinator: SONOFF ZBDongle-E)
 - [x] Pair temp/humidity sensor — SONOFF SNZB-02DR2 paired, entities include
       `sensor.closet_temp_temperature` and `sensor.closet_temp_humidity`
-- [ ] Configure the Generic Thermostat helper in HA (values spec'd above — remember
-      AC mode)
-- [ ] Validate: confirm closet temp tracks near room ambient under normal load
+- [x] Lock Zigbee network to channel 25 (migrated off the WiFi-overlapping channel 11
+      ZHA auto-picked at setup)
 
 ## References
 
