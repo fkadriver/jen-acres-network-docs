@@ -336,6 +336,43 @@ out to have issues:
   one outgoing hot to the load terminal, pigtail the other straight through — same
   single-pole wiring approach as the relay solution above.
 
+### Smoke / CO Detectors
+
+Real combustion risk here, not a hypothetical: **gas furnace, gas water heater, and
+a wood fireplace** — three separate CO sources, not just one.
+
+**Picks: Heiman HS1SA-E (smoke) and HS1CA-E (CO)** — separate standalone units, not
+a combo box (Heiman doesn't bundle smoke+CO into one device the way
+Kidde/First Alert combo alarms do). Both confirmed in **ZHA's own quirks module**
+(`zhaquirks/heiman/hs1sa_e_lover.py`, `zhaquirks/heiman/hs1ca_e_plus.py`). Heiman
+became an official "Works with Home Assistant" partner in 2026.
+
+**Avoid Aqara's smoke detector** — community reports flag it as too trigger-happy
+with steam (false alarms near showers/kitchens), consistent with the Aqara
+pairing-quirk caution already noted above for other device categories.
+
+**Safety framing — not a formality**: these are the "also notify Home Assistant"
+layer on top of actual life-safety detection, not a replacement for it. If
+UL-listed, code-compliant standalone smoke/CO alarms aren't already in place at the
+required locations, that's the non-negotiable first layer regardless of what gets
+added here.
+
+**Placement** (more than one CO unit, given three separate combustion sources):
+
+- One per level of the house, minimum — CO spreads through air circulation, not
+  room-by-room the way smoke does.
+- Near sleeping areas specifically — the actual code-driven placement requirement
+  in most jurisdictions (CO incidents are most dangerous while asleep).
+- **Near the wood fireplace specifically** — incomplete combustion / damper issues
+  are a distinct, somewhat likely failure mode compared to the furnace/water heater.
+- **Furnace/water heater area** — if enclosed in a utility space, a unit there
+  catches a problem before it diffuses through the house, more warning time than a
+  bedroom-only detector.
+
+Realistically 3+ HS1CA-E units depending on actual layout (fireplace room,
+mechanical/utility area, main sleeping area/hallway) rather than just one.
+Each pairs independently to ZHA.
+
 ### Legacy 433MHz Sensors (Sharp SPC1107 outdoor sensor) — speculative, not a plan
 
 Already own a Sharp SPC1107 atomic wall clock; its external temp/humidity sensor
@@ -371,6 +408,8 @@ sensor itself is needed.
       already provides the disconnect; relay rated 16A vs. heater's 4.2A draw)
 - [ ] Pair relay + one spare SNZB-02D to ZHA, configure Generic Thermostat helper
       (AC mode OFF — this is heating logic, not the closet's cooling logic)
+- [ ] Purchase Heiman HS1SA-E (smoke) and 3+ HS1CA-E (CO) units — placement: wood
+      fireplace room, furnace/water heater area, main sleeping area/hallway
 
 **Not current — barn lighting, 2–3 years out:**
 
