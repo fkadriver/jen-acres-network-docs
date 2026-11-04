@@ -255,6 +255,87 @@ don't let it drive an in-house switch decision that's needed sooner — Zigbee a
 ecosystem is preferred anyway — no longer a decision that determines whether a Z-Wave
 radio gets bought at all, just which protocol these specific switches land on.
 
+### Baseboard Heater Thermostats
+
+Replacing old **Cadet T410B111** mechanical double-pole line-voltage thermostats
+(22A @ 240V rating — just the switching ceiling, not the actual heater load) with
+Zigbee control, same Zigbee-first reasoning as everywhere else in this doc.
+
+**Primary solution: Zigbee relay + spare SNZB-02D + Generic Thermostat helper** —
+reuses sensors already purchased (two SNZB-02D bought for the closet, one spare)
+and the exact same pattern already built for the closet fan (see
+[11_CLOSET_COOLING.md](11_CLOSET_COOLING.md)), instead of paying for a thermostat
+with built-in sensing that goes unused.
+
+- **SONOFF MINI-ZB1GS ("MINI ONE")** — Zigbee 3.0, rated 100–240V / 16A max,
+  ~$18–20. Sonoff's Zigbee lineup has paired cleanly with ZHA every other time in
+  this project (S40 Lite, ZBDongle-E) — no quirk-compatibility question mark the
+  way Stelpro had, though no dedicated ZHA quirk was found for this specific model
+  either (not unusual for Sonoff switches — most just work via the standard Zigbee
+  On/Off cluster without needing one).
+- **Correction: this is a "neutral-required" device, not a no-neutral one** — SONOFF's
+  "ZBMINI Extreme" (ZBMINIR2) naming initially looked like the no-neutral option,
+  but checking SONOFF's own spec pages directly: **ZBMINIR2 requires a neutral**
+  (10A/2400W @ 240V); the actual no-neutral model is the different, lower-rated
+  **ZBMINIL2** (6A). The MINI-ZB1GS is also a neutral-required design — but that's
+  fine here, explained below.
+- **Why a "neutral-required" relay still works on a true no-neutral 240V
+  split-phase circuit**: the device doesn't actually need a *true* neutral, just a
+  voltage differential within its rated range across its L and N terminals to power
+  itself — and unlike a lighting retrofit where the switch box is genuinely missing
+  a second conductor, this box already has **two hot legs physically present**
+  (L1, L2). Wire **L1 → its "L" terminal** (powers the device and feeds the relay),
+  **L2 → its "N" terminal** (self-power reference only, not part of the switched
+  path) — same 240V differential a true hot+neutral circuit would give it. The
+  relay's switched output goes to one heater leg; L2 also gets pigtailed straight
+  to the heater's other leg (unswitched), matching the single-pole-is-fine
+  conclusion below.
+- **Amperage check**: Cadet 4F1000 heater draws 4.2A continuous; relay's rated
+  16A — only **26% of capacity**, well under the usual 80% continuous-load
+  guideline, and it's a purely resistive load (no inrush/arcing concern the way a
+  motor would add). Comfortable margin.
+- **Dry-contact caveat doesn't apply here**: some baseboard heaters have their own
+  electronic control board needing a dry-contact signal rather than direct
+  line-voltage switching (frying the board otherwise, needs a contactor in between).
+  The Cadet 4F1000 is a plain resistive element, no control board — direct relay
+  switching in series is exactly how the original T410B111 worked.
+- Fits in the same single-gang box the Cadet occupies now.
+- Pair the relay + one spare SNZB-02D to ZHA, then a **Generic Thermostat helper**
+  (sensor = SNZB-02D, switch = relay, **AC mode OFF this time** — unlike the closet,
+  this is heating logic, not cooling, so AC mode should stay off/default here).
+
+**Why single-pole switching is fine on this double-pole circuit**: confirmed this
+circuit has a **double-pole breaker in the panel** (slots 23/25) — that breaker is
+the code-recognized disconnecting means, not the thermostat/relay, and there's no
+local code requirement forcing double-pole switching downstream either. Wiring: the
+Cadet's double-pole box has two hot wires in and two hot wires out — land both
+incoming hots on the relay's line-side terminals per above, but only switch **one**
+outgoing hot; the other outgoing hot (to the heater) gets spliced straight to its
+matching incoming hot (pigtailed, not switched).
+
+**Fallback: Sinopé TH1123ZB — single-pole, extremely expensive for what it is
+(~$80–160 depending on retailer) given it's just a relay + sensor + logic, the same
+three things the primary solution above assembles for ~$20.** Keeping the research
+since it's the better-documented, zero-assembly option if the relay approach turns
+out to have issues:
+
+- Rated 3000W/12.5A @ 240V, confirmed in **ZHA's own quirks module**
+  (`zhaquirks/sinope/thermostat.py`) — not just Zigbee2MQTT.
+- The double-pole sibling, **TH1500ZB**, is the "correct" match for the Cadet's
+  original double-pole wiring, but Amazon currently lists it unavailable and its
+  manufacturer US product page 404s — not clearly discontinued, just hard to
+  actually buy right now. Moot anyway since single-pole is confirmed fine here.
+- If a future heater's load exceeds ~3000W/12.5A @ 240V: step up to **TH1124ZB**
+  (same single-pole family, 4000W/16.7A @ 240V).
+- Stelpro's Zigbee lineup (SMT402/ASMT402 Maestro, ~$90–100) is cheaper than Sinopé
+  but has **no confirmed ZHA quirk** (zero hits searching `zigpy/zha-device-handlers`
+  for "stelpro") — real uncertainty on whether manufacturer-specific extras work
+  under ZHA specifically, vs. Zigbee2MQTT where it's documented. Not worth the
+  savings given the relay approach above is both cheaper and better-understood.
+- Wiring if ever used: land both incoming hots on the line terminals, only connect
+  one outgoing hot to the load terminal, pigtail the other straight through — same
+  single-pole wiring approach as the relay solution above.
+
 ### Legacy 433MHz Sensors (Sharp SPC1107 outdoor sensor) — speculative, not a plan
 
 Already own a Sharp SPC1107 atomic wall clock; its external temp/humidity sensor
@@ -285,6 +366,11 @@ sensor itself is needed.
 - [ ] Decide remote light switch protocol (Z-Wave vs Zigbee) for the in-house switches
       — not gated on the barn/ZWA-2 timeline, that's years out
 - [ ] Pick weather station (Ecowitt vs Tempest) and set up its local HA integration
+- [ ] Purchase SONOFF MINI-ZB1GS, replace Cadet T410B111 on the Cadet 4F1000
+      baseboard heater (single-pole switching confirmed OK — double-pole breaker
+      already provides the disconnect; relay rated 16A vs. heater's 4.2A draw)
+- [ ] Pair relay + one spare SNZB-02D to ZHA, configure Generic Thermostat helper
+      (AC mode OFF — this is heating logic, not the closet's cooling logic)
 
 **Not current — barn lighting, 2–3 years out:**
 
