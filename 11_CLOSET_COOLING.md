@@ -192,16 +192,13 @@ paired but has nothing to switch yet.
 Software side (Zigbee pairing, channel, helper config) is done or spec'd. Physical
 side is next — ordered below by actual dependency, top to bottom:
 
-1. [ ] **Identify the second flex duct in the joist bay** before cutting anything near
-       it — pure information-gathering, gates step 2
-2. [ ] **Cut return grille opening** (ceiling, upper-right, near equipment rack), clear
-       local insulation, seal drywall-to-joist edge — depends on step 1; this is also
-       where the fan physically mounts (step 4)
-3. [ ] **Cut wall transfer vent behind nas01** (bottom-left, into hallway) — the
-       makeup-air path; door is solid, so the return tap in step 2 can't work without
-       this. Independent of steps 1–2, can be done in parallel
-4. [ ] **Mount fan + Zigbee plug, plug into power** — depends on step 2 (return tap
-       opening needs to exist first)
+1. [x] **Identify the second flex duct in the joist bay** — done
+2. [x] **Cut return grille opening** (ceiling, upper-right, near equipment rack), clear
+       local insulation, seal drywall-to-joist edge — done; this is also where the fan
+       physically mounts (step 4)
+3. [x] **Cut wall transfer vent behind nas01** (bottom-left, into hallway) — the
+       makeup-air path — done
+4. [x] **Mount fan + Zigbee plug, plug into power** — installed
 5. [ ] **Route Zigbee adapter's USB extension out to the hallway** (radio setup itself
        is tracked in [13_HOME_ASSISTANT.md](13_HOME_ASSISTANT.md)) — same opening as
        the makeup-air vent, bundle with step 3's work
@@ -209,8 +206,7 @@ side is next — ordered below by actual dependency, top to bottom:
        `sensor.closet_temp_temperature` exceeds 90°F for 5+ min, via `notify.iphone`.
        Doesn't depend on the fan being mounted, so done now
 7. [ ] Configure the Generic Thermostat helper in HA (values spec'd above — remember
-       AC mode) — can technically be done anytime now that both entities exist, but
-       leave it in Off mode until step 4 is done
+       AC mode) — fan is mounted now, no longer blocked on anything
 8. [ ] Validate: confirm closet temp tracks near room ambient under normal load — last
        step, depends on everything above
 
