@@ -1,8 +1,9 @@
 # Server Closet Cooling (HVAC Return Tap + HA-Automated Fan)
 
-**Status: planning — not yet implemented.** Site survey of the closet ceiling is done
-(see below). Zigbee mesh (fan plug + temp sensor) is paired; physical install
-(vent/grille cutting, fan mounting) is still outstanding.
+**Status: live and running, 2026-11-04.** Physical install (vent/grille cutting, fan
+mounting) is done; Generic Thermostat helper is configured and confirmed actively
+controlling the fan. Only remaining item is routing the Zigbee USB extension out to
+the hallway (cosmetic/RF-hygiene, not functional) and longer-run validation.
 
 ## Problem
 
@@ -171,19 +172,16 @@ paired but has nothing to switch yet.
   the air actually leaving the closet. Relevant entities:
   `sensor.closet_temp_temperature`, `sensor.closet_temp_humidity`,
   `sensor.closet_temp_battery`.
-- In Home Assistant, use the built-in **Generic Thermostat** helper (Settings → Devices
-  & Services → Helpers → *Generic Thermostat*) rather than hand-written automation
-  YAML:
+- **Configured and live** as the built-in **Generic Thermostat** helper (Settings →
+  Devices & Services → Helpers → *Generic Thermostat*), entity
+  `climate.network_closet_closet_fan_network_closet_temp`:
   - Heater (switch) entity: `switch.network_closet_closet_fan`
   - Temperature sensor: `sensor.closet_temp_temperature`
-  - **AC mode: ON** — this is a cooling setup (fan runs when too hot), and Generic
-    Thermostat defaults to heater logic. Without AC mode enabled, it runs backwards —
-    fan on when cold, off when hot.
-  - Target temp: a few degrees above room ambient (e.g. 78–80°F) as a starting point;
-    hot/cold tolerance ±2°F as a starting point, tune after living with it.
-  - Produces a native `climate` entity with a dashboard thermostat card. Leave it in
-    **Off** mode until the fan is actually mounted and wired — the plug is paired but
-    has nothing to switch yet.
+  - **AC mode: ON** — confirmed correct; this is a cooling setup (fan runs when too
+    hot), and Generic Thermostat defaults to heater logic without it.
+  - Target temp: **70°F**, hot/cold tolerance ±2°F — tune after living with it.
+  - Mode: **Cool** (active). Verified end-to-end 2026-11-04: closet at 76°F,
+    `hvac_action: cooling`, fan switch `on`.
 - Optional second automation: mobile notification if closet temp exceeds a critical
   threshold (e.g. 90°F) — early warning for a dead fan or blocked return.
 
@@ -205,10 +203,14 @@ side is next — ordered below by actual dependency, top to bottom:
 6. [x] Set up closet high-temp alert automation — notifies if
        `sensor.closet_temp_temperature` exceeds 90°F for 5+ min, via `notify.iphone`.
        Doesn't depend on the fan being mounted, so done now
-7. [ ] Configure the Generic Thermostat helper in HA (values spec'd above — remember
-       AC mode) — fan is mounted now, no longer blocked on anything
-8. [ ] Validate: confirm closet temp tracks near room ambient under normal load — last
-       step, depends on everything above
+7. [x] Configure the Generic Thermostat helper in HA — done, 70°F setpoint, AC mode
+       on. Fan plug dropped off the Zigbee mesh right after mounting (blinking green,
+       no last_seen activity even after a power cycle) — re-paired via ZHA's Add
+       Device flow, came back clean
+8. [~] Validate: confirmed the control loop works end-to-end (76°F closet temp →
+       `hvac_action: cooling` → fan switch `on`), 2026-11-04. Longer-run validation
+       (does it actually track down toward room ambient over time) still pending —
+       check back after it's had a chance to run
 
 Already done:
 
