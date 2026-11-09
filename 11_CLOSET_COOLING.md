@@ -182,8 +182,19 @@ paired but has nothing to switch yet.
   - Target temp: **70°F**, hot/cold tolerance ±2°F — tune after living with it.
   - Mode: **Cool** (active). Verified end-to-end 2026-11-04: closet at 76°F,
     `hvac_action: cooling`, fan switch `on`.
-- Optional second automation: mobile notification if closet temp exceeds a critical
-  threshold (e.g. 90°F) — early warning for a dead fan or blocked return.
+- **Two automations on the same 90°F/5-min trigger, kept separate on purpose** (one
+  disables independently of the other):
+  - `closet_high_temp_alert` — mobile notification via `notify.iphone`, early warning
+    for a dead fan or blocked return.
+  - `closet_high_temp_shutdown` — gracefully shuts down **nas01, vm01, log01,
+    sands-bak01** (not the router/switch/APs, so the network itself stays up). Each
+    host runs a small Tailscale-only authenticated HTTP listener
+    (`shutdown-listener`, NixOS module for nas01/vm01/log01, hand-installed via
+    `hosts/sands-bak01/setup.sh` step 17 since that host isn't NixOS); HA calls it
+    via `rest_command` rather than SSH, since HA Core's container has no SSH client
+    and the servers sit on a different VLAN — same "route it over Tailscale instead
+    of punching a firewall hole" pattern used for the NAS backup NFS export (see
+    [12_UPS_POWER.md](12_UPS_POWER.md)).
 
 ## Outstanding / TODO
 
@@ -203,6 +214,13 @@ side is next — ordered below by actual dependency, top to bottom:
 6. [x] Set up closet high-temp alert automation — notifies if
        `sensor.closet_temp_temperature` exceeds 90°F for 5+ min, via `notify.iphone`.
        Doesn't depend on the fan being mounted, so done now
+6b. [~] Set up closet high-temp **shutdown** automation (nas01/vm01/log01/
+       sands-bak01) — same trigger, separate automation. HA-side config written
+       (`rest_command` + `closet_high_temp_shutdown`), needs the user to restart
+       HA Core to pick it up. NixOS-side `shutdown_listener_token` sops secret
+       needs to be set (`sops --set` command provided separately) and nas01/
+       vm01/log01 rebuilt; sands-bak01 needs the token written by hand and the
+       listener service started (setup.sh manual step 6)
 7. [x] Configure the Generic Thermostat helper in HA — done, 70°F setpoint, AC mode
        on. Fan plug dropped off the Zigbee mesh right after mounting (blinking green,
        no last_seen activity even after a power cycle) — re-paired via ZHA's Add
