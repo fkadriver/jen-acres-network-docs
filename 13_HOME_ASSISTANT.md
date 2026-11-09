@@ -1,8 +1,8 @@
 # Home Assistant / IoT Network
 
-**Status: early setup.** HA Green is running but minimally configured — no radios added
-yet. This doc covers the HA platform itself and device/protocol decisions across the
-whole house. Device-specific implementation for the server closet (temp sensor, fan
+**Status: radios in progress.** Zigbee (ZBT-2, channel 25) and two ESPHome Bluetooth
+proxies (office, garage) are live; Z-Wave (ZWA-2) not yet purchased. This doc covers
+the HA platform itself and device/protocol decisions across the whole house. Device-specific implementation for the server closet (temp sensor, fan
 plug) lives in [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md); it just consumes the
 Zigbee mesh set up here.
 
@@ -69,13 +69,40 @@ simultaneously, ~$69.
 No single BT adapter on the HA Green host would cover the house — range is short and
 the closet's RF environment is poor anyway. Use **ESPHome Bluetooth proxies** (cheap
 ESP32 boards flashed with proxy firmware) placed per room/area as BLE device coverage
-expands. **M5Stack Atom Lite** (~$7.50–10, no soldering, flashes via ESPHome's
-browser-based web installer):
+expands.
 
-- [M5Stack official store](https://shop.m5stack.com/products/atom-lite-esp32-development-kit)
-- [Amazon](https://us.amazon.com/M5Stack-Official-Atom-ESP32-Development/dp/B0FB94ZFXY)
-- [Pimoroni](https://shop.pimoroni.com/products/atom-lite-esp32-development-kit)
-- [The Pi Hut](https://thepihut.com/products/atom-lite-esp32-development-kit)
+**Live now (2026-11-09): two proxies placed.**
+
+- **Office** — **M5Stack Atom Lite** (~$7.50–10; ESP32 + FTDI FT232 USB-serial
+  chip). [M5Stack store](https://shop.m5stack.com/products/atom-lite-esp32-development-kit) /
+  [Amazon](https://us.amazon.com/M5Stack-Official-Atom-ESP32-Development/dp/B0FB94ZFXY) /
+  [Pimoroni](https://shop.pimoroni.com/products/atom-lite-esp32-development-kit) /
+  [The Pi Hut](https://thepihut.com/products/atom-lite-esp32-development-kit).
+  Registered in HA as both an `esphome` config entry and a `bluetooth` scanner
+  entry (`office-ble-proxy`, B8:7B:4D:18:EB:EA).
+- **Garage** — a cheap AliExpress-style board sold as "ESP32-C3 SuperMini," but
+  **esptool confirmed it's actually an ESP32-C6** at flash time — a known
+  mislabeling pattern on these clone boards, so trust what esptool reports over
+  the listing title. Uses the chip's native USB-JTAG/serial controller
+  (`idVendor:idProduct` = `303a:1001`), a different USB identity from the
+  office board's FTDI chip. Registered in HA as `esphome` + `bluetooth`
+  scanner entries (`garage-ble-proxy`, 90:64:9B:AA:5A:24/26).
+
+Neither board flashes via ESPHome's browser-based web installer here — the
+daily-driver browser (Firefox) doesn't support the WebSerial API it needs.
+Instead: `~/git/nixos/modules/esphome-flash.nix` (NixOS module, enabled on
+`latitude`) installs the `esphome` CLI plus udev rules mapping either board's
+USB-serial chip to a stable `/dev/esp32-flash` symlink (one rule per chip
+type, both boards land on the same symlink name since only one is flashed at
+a time), and a wrapper script (`esphome-flash <config.yaml>`) that points
+`esphome run` at it. ESPHome configs and WiFi/API secrets live in `~/esphome/`
+on `latitude`, outside any repo — not git-tracked, since it holds the WiFi
+password and per-device API encryption keys.
+
+HA Green's own host also picked up a plugged-in USB Bluetooth dongle
+(Realtek), registered as a third `bluetooth` scanner — not an ESPHome proxy,
+just the host's local radio adding its own coverage near wherever HA Green
+physically sits.
 
 Budget one proxy per room/area with actual BLE devices, not one trying to cover the
 whole house.
@@ -415,6 +442,12 @@ sensor itself is needed.
       [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md))
 - [x] Confirm which Ultraloq U-Bolt variant is installed — 2021 U-Bolt, Bluetooth-only,
       no Z-Wave module/upgrade path exists for this generation
+- [x] Place ESPHome Bluetooth proxy in the office for the existing BT lights —
+      M5Stack Atom Lite, live 2026-11-09
+- [x] Place ESPHome Bluetooth proxy in the garage — ESP32-C6 SuperMini-style
+      clone board, live 2026-11-09
+- [ ] Place a third ESPHome Bluetooth proxy near the front door if the local-BLE
+      Ultraloq lock path is chosen (see Door Locks above)
 - [ ] Decide lock path: local-BLE community integration (free, unofficial) vs
       replacing with an official Z-Wave Ultraloq (~$180–220+, certified)
 - [ ] Decide remote light switch protocol (Z-Wave vs Zigbee) for the in-house switches
@@ -437,8 +470,6 @@ sensor itself is needed.
 
 - [ ] Purchase ZWA-2 (Z-Wave) and one Zooz ZEN76/77 800LR switch; range-test at the
       barn's actual switch location before buying more
-- [ ] Place first ESPHome Bluetooth proxy (office) for the existing BT lights; a second
-      near the front door if the local-BLE lock path is chosen
 
 **Someday / speculative — not a real plan:**
 
