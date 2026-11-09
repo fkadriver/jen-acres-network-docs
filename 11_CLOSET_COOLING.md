@@ -196,6 +196,13 @@ paired but has nothing to switch yet.
     of punching a firewall hole" pattern used for the NAS backup NFS export (see
     [12_UPS_POWER.md](12_UPS_POWER.md)).
 
+**Closet temp also mirrored to each server locally** — a third automation,
+`closet_temp_status_push`, fires on every `sensor.closet_temp_temperature` update and
+POSTs the current reading + a 90°F-above flag to each host's `shutdown-listener` at
+`/status`. Run **`closet-status`** directly on nas01/vm01/log01/sands-bak01 to see it
+(e.g. `Closet temp: 78.0F (updated 42s ago)`) — no HA round-trip needed, useful for
+checking "why did this reboot" from the host itself after a shutdown.
+
 ## Outstanding / TODO
 
 Software side (Zigbee pairing, channel, helper config) is done or spec'd. Physical
@@ -215,16 +222,22 @@ side is next — ordered below by actual dependency, top to bottom:
        `sensor.closet_temp_temperature` exceeds 90°F for 5+ min, via `notify.iphone`.
        Doesn't depend on the fan being mounted, so done now
 6b. [~] Set up closet high-temp **shutdown** automation (nas01/vm01/log01/
-       sands-bak01) — same trigger, separate automation. HA-side config written
-       (`rest_command` + `closet_high_temp_shutdown`), needs the user to restart
-       HA Core to pick it up. NixOS-side `shutdown_listener_token` sops secret
-       needs to be set (`sops --set` command provided separately) and nas01/
-       vm01/log01 rebuilt; sands-bak01 needs the token written by hand and the
-       listener service started (setup.sh manual step 6)
-7. [x] Configure the Generic Thermostat helper in HA — done, 70°F setpoint, AC mode
-       on. Fan plug dropped off the Zigbee mesh right after mounting (blinking green,
-       no last_seen activity even after a power cycle) — re-paired via ZHA's Add
-       Device flow, came back clean
+       sands-bak01) plus the `closet_temp_status_push` status mirror — same
+       trigger, separate automations. HA-side config written (`rest_command`
+       x8 + both automations), done via restarting HA Core. NixOS-side
+       `shutdown_listener_token` sops secret still needs to be set
+       (`sops --set` command provided separately) and nas01/vm01/log01
+       rebuilt; sands-bak01 needs the token written by hand and the listener
+       service started (setup.sh manual step 6) — until then the shutdown
+       and `closet-status` pieces are wired on the HA side but not yet live
+       on any of the four hosts
+7. [x] Configure the Generic Thermostat helper in HA — done. Setpoint raised
+       70°F → **75°F**; min/max range widened to 60–85°F (initial setup had
+       left `max_temp` capped at 70, which silently capped the UI slider —
+       fixed by editing `core.config_entries` directly and reloading). AC
+       mode on. Fan plug dropped off the Zigbee mesh right after mounting
+       (blinking green, no last_seen activity even after a power cycle) —
+       re-paired via ZHA's Add Device flow, came back clean
 8. [~] Validate: confirmed the control loop works end-to-end (76°F closet temp →
        `hvac_action: cooling` → fan switch `on`), 2026-11-04. Longer-run validation
        (does it actually track down toward room ambient over time) still pending —
