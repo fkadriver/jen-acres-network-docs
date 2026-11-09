@@ -199,6 +199,16 @@ is no Z-Wave module or upgrade path for this generation of lock** — Z-Wave Ult
 are a separate product line, not a retrofit. Getting Z-Wave here means replacing the
 lock outright, not adding a module.
 
+**Three doors, not one** — front, back, and garage all get Ultraloq locks (same
+Bluetooth-only reasoning applies to each). Each needs its own nearby BLE proxy for
+reliable GATT reachability — the plan is to place all the BLE proxies first, then
+empirically check which proxy actually reaches which lock, rather than guessing
+coverage in advance. Working assumption once placement is done: **office proxy
+covers the back door, garage proxy covers the garage door**, with a dedicated
+front-door proxy still needed (see TODO). The garage proxy itself is lock-only in
+that room — unlike office, there are no other BLE devices (e.g. LED strips)
+planned for the garage.
+
 Two real paths, not one:
 
 1. **Keep the lock, go local-BLE.** Community integrations
@@ -444,10 +454,16 @@ sensor itself is needed.
       no Z-Wave module/upgrade path exists for this generation
 - [x] Place ESPHome Bluetooth proxy in the office for the existing BT lights —
       M5Stack Atom Lite, live 2026-11-09
-- [x] Place ESPHome Bluetooth proxy in the garage — ESP32-C6 SuperMini-style
-      clone board, live 2026-11-09
-- [ ] Place a third ESPHome Bluetooth proxy near the front door if the local-BLE
-      Ultraloq lock path is chosen (see Door Locks above)
+- [x] Flash ESPHome Bluetooth proxy for the garage — ESP32-C6 SuperMini-style
+      clone board, paired to HA 2026-11-09
+- [ ] Physically move/mount the garage proxy at its actual garage location (was
+      only flashed at the laptop so far, not yet placed where it needs to cover)
+- [ ] Place a third ESPHome Bluetooth proxy near the front door for the
+      local-BLE Ultraloq lock path (see Door Locks above)
+- [ ] Once all three proxies are physically placed, check actual BLE signal
+      reachability per lock (front/back/garage) against each proxy — working
+      assumption is office→back door, garage→garage door, but unconfirmed
+      until tested
 - [ ] Decide lock path: local-BLE community integration (free, unofficial) vs
       replacing with an official Z-Wave Ultraloq (~$180–220+, certified)
 - [ ] Decide remote light switch protocol (Z-Wave vs Zigbee) for the in-house switches
