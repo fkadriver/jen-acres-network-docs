@@ -1,7 +1,8 @@
 # Home Assistant / IoT Network
 
 **Status: radios in progress.** Zigbee (ZBT-2, channel 25) and two ESPHome Bluetooth
-proxies (office, garage) are live; Z-Wave (ZWA-2) not yet purchased. This doc covers
+proxies (network closet, garage) are live at their final physical locations;
+Z-Wave (ZWA-2) not yet purchased. This doc covers
 the HA platform itself and device/protocol decisions across the whole house. Device-specific implementation for the server closet (temp sensor, fan
 plug) lives in [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md); it just consumes the
 Zigbee mesh set up here.
@@ -71,22 +72,33 @@ the closet's RF environment is poor anyway. Use **ESPHome Bluetooth proxies** (c
 ESP32 boards flashed with proxy firmware) placed per room/area as BLE device coverage
 expands.
 
-**Live now (2026-11-09): two proxies placed.**
+**Live now (2026-11-10): two proxies placed, both at their final physical
+locations.**
 
-- **Office** — **M5Stack Atom Lite** (~$7.50–10; ESP32 + FTDI FT232 USB-serial
-  chip). [M5Stack store](https://shop.m5stack.com/products/atom-lite-esp32-development-kit) /
+- **Network Closet, west end of the house** — entity name `office-ble-proxy`
+  (named for its original intended BT-lights coverage; its final physical
+  placement ended up being the network closet rather than the office itself,
+  close enough to still cover the office's BT lights). **M5Stack Atom Lite**
+  (~$7.50–10; ESP32 + FTDI FT232 USB-serial chip).
+  [M5Stack store](https://shop.m5stack.com/products/atom-lite-esp32-development-kit) /
   [Amazon](https://us.amazon.com/M5Stack-Official-Atom-ESP32-Development/dp/B0FB94ZFXY) /
   [Pimoroni](https://shop.pimoroni.com/products/atom-lite-esp32-development-kit) /
   [The Pi Hut](https://thepihut.com/products/atom-lite-esp32-development-kit).
   Registered in HA as both an `esphome` config entry and a `bluetooth` scanner
   entry (`office-ble-proxy`, B8:7B:4D:18:EB:EA).
-- **Garage** — a cheap AliExpress-style board sold as "ESP32-C3 SuperMini," but
-  **esptool confirmed it's actually an ESP32-C6** at flash time — a known
-  mislabeling pattern on these clone boards, so trust what esptool reports over
-  the listing title. Uses the chip's native USB-JTAG/serial controller
-  (`idVendor:idProduct` = `303a:1001`), a different USB identity from the
-  office board's FTDI chip. Registered in HA as `esphome` + `bluetooth`
-  scanner entries (`garage-ble-proxy`, 90:64:9B:AA:5A:24/26).
+- **Garage, east end of the house** — a cheap AliExpress-style board sold as
+  "ESP32-C3 SuperMini," but **esptool confirmed it's actually an ESP32-C6** at
+  flash time — a known mislabeling pattern on these clone boards, so trust
+  what esptool reports over the listing title. Uses the chip's native
+  USB-JTAG/serial controller (`idVendor:idProduct` = `303a:1001`), a different
+  USB identity from the closet board's FTDI chip. Registered in HA as
+  `esphome` + `bluetooth` scanner entries (`garage-ble-proxy`,
+  90:64:9B:AA:5A:24/26).
+
+A third (front-door) proxy isn't being added preemptively — the two above sit
+at opposite ends of the house (west/east), so the plan is to add a third only
+if the empirical reachability check (see Door Locks below) actually shows a
+gap at the front door, not as a given.
 
 Neither board flashes via ESPHome's browser-based web installer here — the
 daily-driver browser (Firefox) doesn't support the WebSerial API it needs.
@@ -246,13 +258,16 @@ lock outright, not adding a module.
 
 **Three doors, not one** — front, back, and garage all get Ultraloq locks (same
 Bluetooth-only reasoning applies to each). Each needs its own nearby BLE proxy for
-reliable GATT reachability — the plan is to place all the BLE proxies first, then
+reliable GATT reachability — the plan was to place the BLE proxies first, then
 empirically check which proxy actually reaches which lock, rather than guessing
-coverage in advance. Working assumption once placement is done: **office proxy
-covers the back door, garage proxy covers the garage door**, with a dedicated
-front-door proxy still needed (see TODO). The garage proxy itself is lock-only in
-that room — unlike office, there are no other BLE devices (e.g. LED strips)
-planned for the garage.
+coverage in advance. Both proxies are now at their final locations (west-end
+network closet, east-end garage — see Bluetooth section above); reachability
+testing per lock is still outstanding (see TODO). Working assumption pending that
+test: **west-end (closet) proxy covers the back door, garage proxy covers the
+garage door**. A third, front-door proxy is deliberately not being added
+preemptively — only if the reachability test actually shows a front-door gap.
+The garage proxy itself is lock-only in that room — unlike the closet proxy,
+there are no other BLE devices (e.g. LED strips) planned for the garage.
 
 Two real paths, not one:
 
@@ -504,14 +519,13 @@ sensor itself is needed.
 - [x] Set up network device discovery — built-in core `opnsense` integration,
       scoped API user, Tailscale IP + Verify SSL off (see Network Device
       Discovery above), 2026-11-10
-- [ ] Physically move/mount the garage proxy at its actual garage location (was
-      only flashed at the laptop so far, not yet placed where it needs to cover)
-- [ ] Place a third ESPHome Bluetooth proxy near the front door for the
-      local-BLE Ultraloq lock path (see Door Locks above)
-- [ ] Once all three proxies are physically placed, check actual BLE signal
-      reachability per lock (front/back/garage) against each proxy — working
-      assumption is office→back door, garage→garage door, but unconfirmed
-      until tested
+- [x] Physically move/mount both proxies at their final locations — network
+      closet (west end) and garage (east end), 2026-11-10
+- [ ] Check actual BLE signal reachability per lock (front/back/garage)
+      against the two placed proxies — working assumption is west-end
+      closet→back door, garage→garage door, but unconfirmed until tested
+- [ ] Only add a third (front-door) proxy if that reachability check actually
+      shows a front-door gap — not being added preemptively
 - [ ] Decide lock path: local-BLE community integration (free, unofficial) vs
       replacing with an official Z-Wave Ultraloq (~$180–220+, certified)
 - [ ] Decide remote light switch protocol (Z-Wave vs Zigbee) for the in-house switches
