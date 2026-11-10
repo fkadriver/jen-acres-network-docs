@@ -168,6 +168,51 @@ groundwork for later, not a near-term purchase.
   up on the shopping list (several newer BT-light and sensor lines are shipping
   Thread variants) — no reason to provision for it before then.
 
+## Network Device Discovery
+
+Goal: notice new/unrecognized devices joining the network. Considered HACS +
+`travisghansen/hass-opnsense` (richer sensors/services) but HA 2026.11 folded HACS
+into a built-in Marketplace and the standalone installer no longer runs on that
+version — moot anyway since the built-in **core `opnsense` integration** already
+covers the actual need (presence detection via OPNsense's ARP table) with zero
+extra install.
+
+**Setup (2026-11-10):**
+- Dedicated OPNsense local user `ha-opnsense-api`, scope `automation`, privileges
+  limited to **Diagnostics: ARP Table**, **Status: Interfaces**, **System:
+  Firmware** — not the main admin account. API key/secret generated via
+  System → Access → Users → API Keys (no CLI equivalent exists for this step —
+  `add_user.php` under `/usr/local/opnsense/scripts/auth/` is OPNsense's own
+  official user-creation script, but running it is blocked by Claude Code's own
+  safety classifier as a credentialed-account action; API key generation has no
+  standalone script at all, only GUI/MVC controller code — so both steps are
+  GUI-only in practice).
+- HA integration config: Settings → Devices & Services → Add Integration →
+  OPNsense. **URL uses OPNsense's Tailscale IP** (`https://100.100.222.38:443/api`),
+  not its Tailscale hostname — same cross-VLAN-via-Tailscale pattern as the NAS
+  backup NFS export and the closet shutdown-listener. **Verify SSL: off.** This
+  isn't trusting a bad cert — OPNsense's cert is a real Let's Encrypt cert issued
+  via Tailscale's ACME (confirmed valid, SNI'd to
+  `opnsense.warthog-royal.ts.net`) — but two separate gaps force IP+no-verify
+  instead of hostname+verified:
+  1. HA Core's container can't resolve `*.ts.net` names (its DNS path doesn't
+     reach Tailscale's MagicDNS resolver at `100.100.100.100`), so the hostname
+     URL fails outright.
+  2. Even if it could resolve, the cert's SAN only covers the hostname, not the
+     IP — so hostname verification would still fail against the IP address
+     itself, independent of the DNS gap.
+  Net effect: using the IP is required, and turning off Verify SSL is an
+  unavoidable consequence of that, not a security downgrade on its own.
+- Hit (and re-fixed) the recurring lighttpd/Tailscale boot-order race
+  mid-setup — OPNsense's web UI/API wasn't bound to its Tailscale IP
+  (`sockstat` showed only LAN IPs + loopback on :443). Same bug as documented
+  in the OPNsense update-procedure notes; fix is `sudo configctl webgui
+  restart`. Recurs on its own schedule, not tied to this integration — just
+  happened to surface here.
+
+**Result:** presence-detection `device_tracker` entities per device OPNsense's
+ARP table sees, polled locally, no cloud dependency.
+
 ## Device Categories
 
 ### Weather Station — needs a pick
@@ -456,6 +501,9 @@ sensor itself is needed.
       M5Stack Atom Lite, live 2026-11-09
 - [x] Flash ESPHome Bluetooth proxy for the garage — ESP32-C6 SuperMini-style
       clone board, paired to HA 2026-11-09
+- [x] Set up network device discovery — built-in core `opnsense` integration,
+      scoped API user, Tailscale IP + Verify SSL off (see Network Device
+      Discovery above), 2026-11-10
 - [ ] Physically move/mount the garage proxy at its actual garage location (was
       only flashed at the laptop so far, not yet placed where it needs to cover)
 - [ ] Place a third ESPHome Bluetooth proxy near the front door for the
