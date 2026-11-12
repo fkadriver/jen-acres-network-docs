@@ -91,7 +91,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 8. **Security hardening** → [docs/08_SECURITY_HARDENING.md](docs/08_SECURITY_HARDENING.md)
 9. **nfSensei migration (future)** → [docs/09_NFSENSEI_MIGRATION.md](docs/09_NFSENSEI_MIGRATION.md)
 10. **Starlink WAN + T-Mobile cellular backup** → [docs/10_STARLINK_MULTIWAN.md](docs/10_STARLINK_MULTIWAN.md)
-11. **Closet cooling (planned)** → [docs/11_CLOSET_COOLING.md](docs/11_CLOSET_COOLING.md)
+11. **Closet cooling** → moved to the `homeassist` repo ([stub](docs/11_CLOSET_COOLING.md))
 12. **UPS / power protection (planned)** → [docs/12_UPS_POWER.md](docs/12_UPS_POWER.md)
 13. **Home Assistant / IoT network (early setup)** → [docs/13_HOME_ASSISTANT.md](docs/13_HOME_ASSISTANT.md)
 
@@ -111,7 +111,7 @@ Complete network configuration for x86 quad-port router running **OPNsense 26.7.
 │   ├── 08_SECURITY_HARDENING.md           # Security hardening (users, SSH, 2FA)
 │   ├── 09_NFSENSEI_MIGRATION.md           # nfSensei migration tracking (future)
 │   ├── 10_STARLINK_MULTIWAN.md            # Starlink WAN (em2) + T-Mobile cellular backup plan (em0)
-│   ├── 11_CLOSET_COOLING.md               # Server closet HVAC return tap + HA fan automation (planned)
+│   ├── 11_CLOSET_COOLING.md               # Stub — moved to homeassist repo
 │   ├── 12_UPS_POWER.md                    # UPS sizing, power budget, NUT integration (planned)
 │   ├── 13_HOME_ASSISTANT.md               # HA/IoT network: Zigbee vs Z-Wave, radios, device categories
 │   └── TROUBLESHOOTING.md                 # Consolidated troubleshooting guide
