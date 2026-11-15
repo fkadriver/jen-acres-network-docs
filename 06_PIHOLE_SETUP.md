@@ -58,7 +58,9 @@ and deployed with `./scripts/deploy-piholes.sh` from latitude or vm01:
 - Tailscale + `tailscale serve` (exposes web UI at `https://pihole0x.<tailnet>.ts.net`)
 - Web UI password from Bitwarden via sops-nix (`pihole-set-password.service`)
 - Blocklists: Hagezi Multi (block) + Hagezi Referral Native (allow)
-- rsyslog forwarding to `log01.warthog-royal.ts.net`
+- rsyslog forwarding to `log01.warthog-royal.ts.net` — a transitional relay; pending
+  move to the universal collector `syslog.warthog-royal.ts.net:5515` (nas01), see
+  [08_SECURITY_HARDENING.md](08_SECURITY_HARDENING.md#outstanding--todo)
 
 > Do not configure these settings via the Pi-hole web UI — NixOS will overwrite them on
 > the next rebuild.

@@ -481,6 +481,12 @@ Forward OPNsense logs to `log01` (syslog server) via Tailscale for centralized m
 >    DNS configuration and its MagicDNS resolver returns SERVFAIL for all queries.
 >
 > Received logs land on `log01` under `/var/log/remote/OPNsense.internal/<program>.log`.
+>
+> **`log01` is a relay here, not the final destination.** The fleet-wide collector is
+> now `syslog.warthog-royal.ts.net:5515` (rsyslog + Tailscale sidecar, currently on
+> nas01); every NixOS host forwards there directly. `log01` stays as a transitional
+> receiver that relays on to it, for devices that can't be repointed yet — OPNsense
+> and Pi-hole. Moving them is tracked below.
 
 ### Disable Unused Services
 
@@ -665,6 +671,33 @@ Configure alerts for:
 ✅ Console access required for local admin
 ✅ Hardware security key for 2FA (YubiKey)
 ```
+
+---
+
+## Outstanding / TODO
+
+Repoint the last direct-to-`log01` senders at the universal collector
+(`syslog.warthog-royal.ts.net:5515`) so `log01`'s transitional receiver+relay can be
+retired and there is one syslog target fleet-wide.
+
+- [ ] **OPNsense** — change the Logging target above from `log01.warthog-royal.ts.net`
+      / UDP 514 to `syslog.warthog-royal.ts.net` / 5515. Note the transport change:
+      `log01` listens on both UDP and TCP 514, but every NixOS sender reaches the
+      collector over **TCP** (`protocol="tcp"`), so switch OPNsense's Transport to
+      TCP rather than assuming UDP(4) carries over — whether the collector also
+      accepts UDP on 5515 is defined in the syslog-tailscale repo, not here. Verify
+      logs arrive before removing the old target; the two MagicDNS prerequisites
+      above still apply.
+- [ ] **Pi-hole** — `target=` in `modules/pihole.nix`'s rsyslog `omfwd` action (nixos
+      repo), currently `log01.warthog-royal.ts.net`. See
+      [06_PIHOLE_SETUP.md](06_PIHOLE_SETUP.md).
+- [ ] Confirm both arrive under `/var/log/remote/` on nas01 and are ingested by Wazuh
+      once, not double-counted via the old relay path.
+- [ ] Once both are moved, drop the relay action from `hosts/log01/default.nix` (nixos
+      repo) — it exists only for these two devices.
+
+> The Aruba 2530 switches are *not* part of this — their YA firmware has no syslog
+> forwarding at all, only SNMP traps. See [04_SWITCH_CONFIG.md](04_SWITCH_CONFIG.md).
 
 ---
 
