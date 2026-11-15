@@ -16,19 +16,24 @@ hardware specs in `~/git/nixos` and the switch config doc, not guesses. Pairs wi
 | sands-bak01 | HP ProDesk 600 G4 Desktop Mini | ~15–25W |
 | 15" Compaq monitor | LCD, confirmed | ~20–30W |
 | pihole01 + pihole02 | 2× Raspberry Pi 3B | ~5W each, ~10W total |
+| Starlink Gen 5 dish + Gen 3 router | Dish is outdoors, powered over its cable from the router's PSU in the closet — the whole kit draws through one closet outlet | **~50–100W typical, up to ~120W** at startup / snow-melt heating. These are published **Gen 3 Standard dish** figures; nothing reliable has been published for the Gen 5 residential dish yet (it's expected to draw less). Replace with a real reading from the Starlink app's power stats once it's set up |
+| T-Mobile 5G gateway | Tier2 cellular backup WAN ([10_STARLINK_MULTIWAN.md](10_STARLINK_MULTIWAN.md)) | **~10–15W typical** (T-Mobile publishes 10–14W ready-state across its gateway models), 45W theoretical max |
 
-**Typical running total: ~205–255W** (nas01 now measured rather than estimated).
-**Realistic peak (nas01 under scrub/spin-up + everything else at the high end):
-~350–450W.**
+**Typical running total: ~265–370W** (nas01 measured; the Starlink kit is the biggest
+remaining unknown). **Realistic peak (nas01 under scrub/spin-up, Starlink heating,
+everything else at the high end): ~520–620W.**
+
+The existing 450VA UPS (~250–280W) can't carry this. Typical load alone is at or over
+its rating, and it's almost certainly simulated sine wave (see below).
 
 ## Sizing
 
 Rule of thumb: size for ~1.5–2× real running load, not peak — headroom for inrush
 current (HDD spin-up draws a brief surge above steady-state), keeps the UPS from
 running near its ceiling continuously, and buys more runtime at actual load than the
-rated-capacity runtime number implies. ~230W typical load → **800–1200VA / 500–700W**
-would size it tightly; the recommendation below sits a notch above that for extra
-runtime margin and future load growth.
+rated-capacity runtime number implies. ~320W typical load → **~1000–1200VA / 600–700W**
+would size it tightly. 1500VA / 900W keeps peak load near 65–70% and gives roughly
+15–20 minutes of runtime at typical load.
 
 ## Two things that matter more than capacity
 
@@ -40,16 +45,42 @@ runtime margin and future load growth.
    signal). APC's `usbhid-ups` driver support is the most battle-tested; CyberPower's
    PFC-series also works well via the same driver.
 
+## Outlet / power strip layout
+
+Keep the existing **network power strip**: one button power-cycles the whole
+network stack and leaves the servers alone. That strip plugs into a single UPS battery
+outlet, which is also what makes the outlet count work.
+
+| UPS outlet | What's on it |
+|---|---|
+| Battery 1 | **nas01 PSU1**, plugged in directly (no strip) |
+| Battery 2 | **nas01 PSU2**, plugged in directly (optional: same UPS, so it only protects against a PSU failure, not a power-feed failure) |
+| Battery 3 | **Network strip** (the reset button): Aruba switch (+ AP PoE), OPNsense, Starlink router/PSU, T-Mobile gateway, Pi-holes. ~200–280W, up to ~330W at peak |
+| Battery 4 | **Server strip**: vm01, log01, sands-bak01. ~40–65W |
+| Battery 5–6 | Spare |
+| Surge-only | 15" Compaq monitor (doesn't need battery) |
+
+Notes:
+- Strips plugged into the UPS should be **plain power strips, not surge protectors**.
+  UPS makers (APC and CyberPower) say not to chain a surge suppressor behind a UPS:
+  the suppressor's MOVs can fight the UPS's output on battery, and doing it can void
+  the UPS's equipment-protection warranty. The UPS already provides surge protection.
+- Power both Pi-holes from one dual-port USB charger on the network strip, so they
+  take one strip outlet instead of two.
+- A network-strip reset hard-cuts power to the Pis. The SD-card corruption risk is
+  the same as today, so it's no reason to change the setup.
+- nas01 and its NUT shutdown signal aren't on any reset strip, so a network reset
+  never hard-cuts the ZFS box.
+
 Do **not** put the UPS or anything behind it on a switchable smart plug — see the power
 safety note in [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md).
 
 ## Recommendation
 
 **CyberPower CP1500PFCLCD** (1500VA/900W, pure sine wave, LCD status panel, 10
-outlets — 6 battery+surge, 4 surge-only, ~$200) — now comfortably oversized relative to
-the measured ~230W typical load (good — more runtime margin and room for future
-growth), well-supported under NUT, and the 10 outlets cover all 8 devices without a
-power strip in the mix. Tower form factor, fits the wire shelving better than a
+outlets — 6 battery+surge, 4 surge-only, ~$200) — about 35–40% loaded at the ~320W typical
+load, well supported under NUT, and its 6 battery outlets fit the layout above with
+2 to spare. Tower form factor, fits the wire shelving better than a
 rack-mount unit.
 
 Alternative with a more proven NUT track record, at a price step-up: **APC Smart-UPS
@@ -60,6 +91,8 @@ homelab-community gold standard for USB/NUT monitoring.
 
 - [x] Pull nas01's live power draw from iDRAC — 70W measured, 2026-10-07
 - [x] Confirm whether the 15" Compaq monitor is LCD or CRT — confirmed LCD
+- [ ] Read actual Starlink Gen 5 + Gen 3 router draw from the Starlink app and replace the estimate
+- [ ] Swap any surge-protector strips that will sit behind the UPS for plain power strips
 - [ ] Purchase UPS (CyberPower CP1500PFCLCD or APC Smart-UPS SMC1500/SMT1500)
 - [ ] Wire UPS and rack into power
 - [ ] Set up NUT (HA add-on or small host) talking to the UPS over USB
