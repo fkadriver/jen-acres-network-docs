@@ -71,6 +71,38 @@ Notes:
 - nas01 and its NUT shutdown signal aren't on any reset strip, so a network reset
   never hard-cuts the ZFS box.
 
+### Option B: two UPSes (keep the existing 450VA for WAN gear)
+
+The layout above is **Option A**: everything on the one 1500VA UPS. That's the simplest
+setup, and the network outlasts or matches the servers.
+
+If the existing 450VA (~250–280W) stays in service, split by what the graceful
+shutdown depends on, not by "network vs servers". The switch and OPNsense carry the
+NUT shutdown signal and the LAN, so they stay on the big UPS with the servers. Only
+the WAN gear goes on the 450:
+
+| UPS | What's on it | Est. load |
+|---|---|---|
+| 1500VA | nas01 (direct), server strip (vm01, log01, sands-bak01), **core network strip** (Aruba switch + AP PoE, OPNsense, Pi-holes) | ~205–255W typical → ~20–25 min |
+| 450VA | **WAN strip**: Starlink router/dish, T-Mobile gateway | ~40–55W typical, ~145W snow-melt peak → roughly 25–40 min on a healthy battery |
+
+Trade-offs:
+- The LAN stays up as long as the servers do, so NUT can always deliver the
+  shutdown. Internet may drop first if the 450 runs out, but shutdown doesn't need it.
+- The 450 ends up lightly loaded and gets decent runtime, unlike putting the whole
+  network stack on it (~125–155W typical, ~250W peak, near its limit).
+- **The one-button reset splits in two.** Cycling the core strip resets the switch,
+  OPNsense and the Pi-holes. Starlink and T-Mobile need their own strip cycled. That's
+  usually fine, because modem/WAN resets and LAN resets are different problems.
+- A 450VA is almost certainly simulated sine wave. That's fine for the Starlink and
+  T-Mobile power adapters; only nas01's active-PFC PSU needs pure sine.
+- Replace the 450's battery if it's more than ~3 years old.
+
+**For either option:** run the NUT server on **nas01 itself**, with the UPS USB cable
+plugged into it, so its own shutdown never depends on the network. Other hosts (vm01,
+log01, sands-bak01, Home Assistant) connect to it as NUT clients over the core
+network, which stays powered as long as they are.
+
 Do **not** put the UPS or anything behind it on a switchable smart plug — see the power
 safety note in [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md).
 
@@ -93,6 +125,7 @@ homelab-community gold standard for USB/NUT monitoring.
 - [x] Read Starlink dish draw from the app: 21W average, 2026-11-15
 - [ ] Grab a winter Starlink reading while snow-melt is running to replace the ~100W peak estimate
 - [ ] Swap any surge-protector strips that will sit behind the UPS for plain power strips
+- [ ] Decide Option A (single 1500VA) vs Option B (1500VA + existing 450VA for WAN)
 - [ ] Purchase UPS (CyberPower CP1500PFCLCD or APC Smart-UPS SMC1500/SMT1500)
 - [ ] Wire UPS and rack into power
 - [ ] Set up NUT (HA add-on or small host) talking to the UPS over USB
