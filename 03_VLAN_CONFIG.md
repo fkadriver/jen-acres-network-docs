@@ -330,6 +330,7 @@ Add a host entry for each device that needs a stable IP:
 | U6MainLevel | 0c:ea:14:81:bc:31 | 192.168.10.60 | SERVERS |
 | U6Basement | 0c:ea:14:81:5c:75 | 192.168.10.61 | SERVERS |
 | LBP162 (printer) | a0:c9:a0:32:3a:39 | 192.168.11.50 | WIFI_SECURE |
+| homeassistant (HA Green) | 20:f8:3b:02:2e:85 | 192.168.21.21 | HomeAssist |
 
 ---
 
