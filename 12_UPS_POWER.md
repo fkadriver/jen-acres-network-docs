@@ -126,7 +126,7 @@ homelab-community gold standard for USB/NUT monitoring.
 - [ ] Grab a winter Starlink reading while snow-melt is running to replace the ~100W peak estimate
 - [ ] Swap any surge-protector strips that will sit behind the UPS for plain power strips
 - [ ] Decide Option A (single 1500VA) vs Option B (1500VA + existing 450VA for WAN)
-- [ ] Purchase UPS (CyberPower CP1500PFCLCD or APC Smart-UPS SMC1500/SMT1500)
+- [ ] <!-- now: Closet UPS --> Purchase UPS (CyberPower CP1500PFCLCD or APC Smart-UPS SMC1500/SMT1500)
 - [ ] Wire UPS and rack into power
 - [ ] Set up NUT (HA add-on or small host) talking to the UPS over USB
 - [ ] Confirm "on battery" / low-battery signal reaches Home Assistant and triggers a
