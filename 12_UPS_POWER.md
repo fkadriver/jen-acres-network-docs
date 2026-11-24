@@ -1,6 +1,6 @@
 # UPS / Power Protection
 
-**Status: planning — not yet purchased.** Power budget below is derived from actual
+**Status: ordered — arriving Friday 2026-11-27.** Power budget below is derived from actual
 hardware specs in `~/git/nixos` and the switch config doc, not guesses. Pairs with
 [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md) — same closet, same rack.
 
@@ -126,8 +126,8 @@ homelab-community gold standard for USB/NUT monitoring.
 - [ ] Grab a winter Starlink reading while snow-melt is running to replace the ~100W peak estimate
 - [ ] Swap any surge-protector strips that will sit behind the UPS for plain power strips
 - [ ] Decide Option A (single 1500VA) vs Option B (1500VA + existing 450VA for WAN)
-- [ ] <!-- now: Closet UPS --> Purchase UPS (CyberPower CP1500PFCLCD or APC Smart-UPS SMC1500/SMT1500)
-- [ ] Wire UPS and rack into power
+- [x] Purchase UPS (CyberPower CP1500PFCLCD or APC Smart-UPS SMC1500/SMT1500) — ordered 2026-11-24, arriving Friday 2026-11-27
+- [ ] <!-- todo: Install closet UPS --> Wire UPS and rack into power (UPS arrives 2026-11-27)
 - [ ] Set up NUT (HA add-on or small host) talking to the UPS over USB
 - [ ] Confirm "on battery" / low-battery signal reaches Home Assistant and triggers a
       graceful nas01 shutdown on extended outage
