@@ -590,6 +590,22 @@ All three Unsecure_Net interfaces use the same single rule — floating rules ha
 
 So these networks get **internet only** + **DNS to Pi-hole**.
 
+**HomeAssist exception: local-only devices (added 2026-11-27).** Some IoT devices are
+controlled by Home Assistant over the LAN and have no reason to reach the internet (cloud
+"smart" bulbs whose vendor cloud is only needed once, at pairing). They get a fixed DHCP
+reservation (Dnsmasq host entry), go in a host alias, and are blocked from everything
+routed by a rule placed **above** the HomeAssist allow rule:
+
+- **Alias:** `Media_Sconces_No_WAN` (host), the media room's two Tuya sconce bulbs
+- **Rule:** Block, log, quick · Interface HomeAssist · Source `Media_Sconces_No_WAN` ·
+  Destination any · sequence 2250 (the HomeAssist allow rule is 2300)
+- DNS to the Pi-holes still passes (rule 800 is earlier), and Home Assistant talks to them
+  inside the VLAN, which never crosses the firewall
+- After adding a device to the alias, kill its existing states (`pfctl -k <ip>`), or its
+  already-open cloud connection keeps passing
+
+Device details live in the private homeassist repo (`docs/MEDIA_ROOM.md`).
+
 ---
 
 ## Step 5: Verify NAT/Outbound Rules
