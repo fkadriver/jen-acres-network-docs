@@ -1,6 +1,6 @@
 # UPS / Power Protection
 
-**Status: ordered — arriving Friday 2026-11-27.** Power budget below is derived from actual
+**Status: arrived and powered on 2026-11-27. NUT runs on vm01 for now (USB cable in vm01); moves to nas01 once everything works. HA integration and the outlet layout are still to do.** Power budget below is derived from actual
 hardware specs in `~/git/nixos` and the switch config doc, not guesses. Pairs with
 [11_CLOSET_COOLING.md](11_CLOSET_COOLING.md) — same closet, same rack.
 
@@ -128,6 +128,15 @@ homelab-community gold standard for USB/NUT monitoring.
 - [ ] Decide Option A (single 1500VA) vs Option B (1500VA + existing 450VA for WAN)
 - [x] Purchase UPS (CyberPower CP1500PFCLCD or APC Smart-UPS SMC1500/SMT1500) — ordered 2026-11-24, arriving Friday 2026-11-27
 - [ ] <!-- todo: Install closet UPS --> Wire UPS and rack into power (UPS arrives 2026-11-27)
-- [ ] Set up NUT (HA add-on or small host) talking to the UPS over USB
+- [~] Set up NUT talking to the UPS over USB. Interim, 2026-11-27: USB in **vm01**, NixOS module
+      `nut-server.nix` in `~/git/nixos` (`usbhid-ups`, UPS name `closet`, upsd on 3493 opened only on
+      `tailscale0`, upsmon primary, read-only `homeassistant` user; passwords generated on the host
+      in `/var/lib/nut-passwords`). First reading: model CP1500PFCLCDa, OL, 100% charge, 25% load,
+      ~27 min runtime, 119V in. HA reaches `100.84.68.105:3493` over Tailscale. Kill-power (UPS cuts
+      its outlets at the end of a low-battery shutdown) is **off** while the server is on vm01:
+      vm01 would cut nas01's power before nas01 shut down. Turn it on (`killPower = true`) on nas01.
+- [ ] <!-- todo: Move UPS USB to nas01 --> Move the UPS USB cable and `services.nutServer` from vm01 to
+      nas01, make the other hosts NUT clients, enable kill-power on nas01, and repoint HA's NUT
+      integration
 - [ ] Confirm "on battery" / low-battery signal reaches Home Assistant and triggers a
       graceful nas01 shutdown on extended outage
